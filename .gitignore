@@ -1,0 +1,9 @@
+backend/.venv/
+**/__pycache__/
+**/*.pyc
+backend/eZion.db
+.env
+*.env
+*.log
+frontend/node_modules/
+Thumbs.db
