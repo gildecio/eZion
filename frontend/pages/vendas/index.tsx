@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function Vendas(): JSX.Element {
   return (
     <main className="page">

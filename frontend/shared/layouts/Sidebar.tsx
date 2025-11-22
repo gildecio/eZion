@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import Dropdown from './Dropdown'
+import Dropdown from '../ui/Dropdown'
 
 const items = [{ href: '/', label: 'Home' }]
 
@@ -18,6 +18,15 @@ export default function Sidebar(): JSX.Element {
             {it.label}
           </Link>
         ))}
+
+        <Dropdown
+          label="Contábil"
+          href="/contabil"
+          items={[
+            { href: '/contabil/empresas', label: 'Empresas' },
+          ]}
+          className={`${router.pathname.startsWith('/contabil') ? 'active' : ''}`}
+        />
 
         <Dropdown
           label="Vendas"
