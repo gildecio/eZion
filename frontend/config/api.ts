@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   grupos: '/api/v1/estoque/grupos/',
   unidades: '/api/v1/estoque/unidades/',
   embalagens: '/api/v1/estoque/embalagens/',
+  locais: '/api/v1/estoque/locais/',
   
   // Vendas
   clientes: '/api/v1/vendas/clientes/',
