@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/gildecio/projetos/eZion/frontend/pages/vendas/pedidos.tsx"],"sourcesContent":["export default function VendasPedidos(): JSX.Element {\n  return (\n    <main className=\"page\">\n      <div className=\"page-header\">\n        <h1>Vendas — Pedidos</h1>\n        <p className=\"muted\">Lista de pedidos</p>\n      </div>\n      <section className=\"panel\">\n        <p>Conteúdo de exemplo: pedidos.</p>\n      </section>\n    </main>\n  )\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,qKAAC;QAAK,WAAU;;0BACd,qKAAC;gBAAI,WAAU;;kCACb,qKAAC;kCAAG;;;;;;kCACJ,qKAAC;wBAAE,WAAU;kCAAQ;;;;;;;;;;;;0BAEvB,qKAAC;gBAAQ,WAAU;0BACjB,cAAA,qKAAC;8BAAE;;;;;;;;;;;;;;;;;AAIX"}}]
-}
