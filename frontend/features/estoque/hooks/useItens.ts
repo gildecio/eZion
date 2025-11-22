@@ -1,37 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { itemService } from '@/features/estoque/services';
-import type { Item, CreateItemDTO, UpdateItemDTO } from '@/features/estoque/types';
+import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '@/features/estoque/types';
+
+interface UseItensFilters {
+  grupo_id?: number | null;
+  tipo?: TipoItem | null;
+}
 
 /**
  * Hook para gerenciar itens (CRUD completo)
  */
-export function useItens() {
+export function useItens(filters?: UseItensFilters) {
   const [itens, setItens] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasConsulted, setHasConsulted] = useState(false);
 
-  useEffect(() => {
-    loadItens();
-  }, []);
-
-  const loadItens = async () => {
+  const loadItens = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await itemService.getAll();
+      const data = await itemService.getAll(filters);
       setItens(data);
+      setHasConsulted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar itens');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    if (filters && Object.keys(filters).length > 0) {
+      loadItens();
+    }
+  }, [loadItens, filters]);
 
   const create = async (data: CreateItemDTO): Promise<Item> => {
     try {
       setError(null);
       const item = await itemService.create(data);
-      setItens(prev => [...prev, item]);
+      // Recarregar dados para refletir a criação
+      if (filters && Object.keys(filters).length > 0) {
+        await loadItens();
+      }
       return item;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao criar item';
@@ -44,7 +56,10 @@ export function useItens() {
     try {
       setError(null);
       const item = await itemService.update(id, data);
-      setItens(prev => prev.map(i => i.id === id ? item : i));
+      // Recarregar dados para refletir a atualização
+      if (filters && Object.keys(filters).length > 0) {
+        await loadItens();
+      }
       return item;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao atualizar item';
@@ -57,7 +72,10 @@ export function useItens() {
     try {
       setError(null);
       await itemService.delete(id);
-      setItens(prev => prev.filter(i => i.id !== id));
+      // Recarregar dados para refletir a exclusão
+      if (filters && Object.keys(filters).length > 0) {
+        await loadItens();
+      }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Erro ao excluir item';
       setError(errorMsg);

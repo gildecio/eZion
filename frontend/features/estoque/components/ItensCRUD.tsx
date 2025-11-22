@@ -1,16 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useItens } from '../hooks';
 import ItemForm from './ItemForm';
 import ItemTable from './ItemTable';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import type { Item, CreateItemDTO, UpdateItemDTO } from '../types';
+import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
+import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
+import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
 
 export default function ItensCRUD() {
-  const { itens, loading, error, create, update, remove } = useItens();
+  const [filtroGrupo, setFiltroGrupo] = useState<number | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<TipoItem | null>(null);
+  const [filtrosAplicados, setFiltrosAplicados] = useState<{
+    grupo_id: number | null;
+    tipo: TipoItem | null;
+  } | undefined>(undefined);
+  
+  const { itens, loading, error, create, update, remove } = useItens(filtrosAplicados);
+  
   const [showForm, setShowForm] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | undefined>(undefined);
   const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [grupos, setGrupos] = useState<GrupoItem[]>([]);
+
+  useEffect(() => {
+    const loadGrupos = async () => {
+      try {
+        const gruposData = await grupoItemService.getAll();
+        setGrupos(gruposData);
+      } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+      }
+    };
+
+    loadGrupos();
+  }, []);
 
   const handleCreate = () => {
     setSelectedItem(undefined);
@@ -57,6 +81,19 @@ export default function ItensCRUD() {
     }
   };
 
+  const handleConsultar = () => {
+    setFiltrosAplicados({
+      grupo_id: filtroGrupo,
+      tipo: filtroTipo
+    });
+  };
+
+  const handleLimparFiltros = () => {
+    setFiltroGrupo(null);
+    setFiltroTipo(null);
+    setFiltrosAplicados(undefined);
+  };
+
   return (
     <div className="itens-crud">
       <div className="header">
@@ -80,6 +117,73 @@ export default function ItensCRUD() {
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
           </svg>
           <span>{error}</span>
+        </div>
+      )}
+
+      {!showForm && (
+        <div className="filters">
+          <div className="filter-group">
+            <label>Filtrar por Grupo:</label>
+            <select
+              value={filtroGrupo || ''}
+              onChange={(e) => setFiltroGrupo(e.target.value ? Number(e.target.value) : null)}
+              className="filter-select"
+            >
+              <option value="">Todos os grupos</option>
+              <option value="0">Sem grupo</option>
+              {grupos.map((grupo) => (
+                <option key={grupo.id} value={grupo.id}>
+                  {grupo.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Filtrar por Tipo:</label>
+            <select
+              value={filtroTipo || ''}
+              onChange={(e) => setFiltroTipo(e.target.value as TipoItem || null)}
+              className="filter-select"
+            >
+              <option value="">Todos os tipos</option>
+              <option value="Produto">Produto</option>
+              <option value="Produto em Criação">Produto em Criação</option>
+              <option value="Insumo">Insumo</option>
+              <option value="Imobilizado">Imobilizado</option>
+              <option value="Servico">Serviço</option>
+              <option value="Embalagem">Embalagem</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+
+          <button
+            onClick={handleConsultar}
+            className="btn-consultar"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Consultar
+          </button>
+
+          {(filtrosAplicados !== undefined) && (
+            <>
+              <button
+                onClick={handleLimparFiltros}
+                className="btn-clear-filters"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Limpar filtros
+              </button>
+
+              <div className="filter-results">
+                {itens.length} {itens.length === 1 ? 'item encontrado' : 'itens encontrados'}
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -196,6 +300,106 @@ export default function ItensCRUD() {
 
         .error-alert span {
           font-size: 0.875rem;
+        }
+
+        .filters {
+          display: flex;
+          gap: 1rem;
+          align-items: flex-end;
+          padding: 1.5rem;
+          background: #f9fafb;
+          border-radius: 8px;
+          margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+        }
+
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          min-width: 200px;
+        }
+
+        .filter-group label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #374151;
+        }
+
+        .filter-select {
+          padding: 0.625rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          background: white;
+          cursor: pointer;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+
+        .filter-select:hover {
+          border-color: #9ca3af;
+        }
+
+        .filter-select:focus {
+          border-color: #556b2f;
+          box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.1);
+        }
+
+        .btn-consultar {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 1.25rem;
+          background: #556b2f;
+          color: white;
+          border: none;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          height: fit-content;
+        }
+
+        .btn-consultar:hover {
+          background: #6b8e23;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(85, 107, 47, 0.2);
+        }
+
+        .btn-clear-filters {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 1rem;
+          background: white;
+          color: #6b7280;
+          border: 1px solid #d1d5db;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          height: fit-content;
+        }
+
+        .btn-clear-filters:hover {
+          background: #f9fafb;
+          border-color: #9ca3af;
+          color: #374151;
+        }
+
+        .filter-results {
+          display: flex;
+          align-items: center;
+          padding: 0.625rem 1rem;
+          background: #556b2f;
+          color: white;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          height: fit-content;
         }
 
         .content {

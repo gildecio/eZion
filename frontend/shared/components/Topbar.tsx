@@ -5,7 +5,7 @@ interface TopbarProps {
   onToggle?: () => void
 }
 
-export default function Topbar({ collapsed, onToggle }: TopbarProps): JSX.Element {
+export default function Topbar({ collapsed, onToggle }: TopbarProps) {
   return (
     <header className="topbar">
       <button className="btn-toggle" onClick={onToggle} aria-label="Toggle sidebar">

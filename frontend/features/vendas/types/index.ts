@@ -1,1 +1,2 @@
-export * from './types';
+// Export vendas types here when created
+export {};

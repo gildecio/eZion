@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Item } from '../types';
+import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
+import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
 
 interface ItemTableProps {
   itens: Item[];
@@ -9,6 +11,21 @@ interface ItemTableProps {
 }
 
 export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTableProps) {
+  const [grupos, setGrupos] = useState<Map<number, string>>(new Map());
+
+  useEffect(() => {
+    const loadGrupos = async () => {
+      try {
+        const gruposData = await grupoItemService.getAll();
+        const gruposMap = new Map(gruposData.map(g => [g.id, g.nome]));
+        setGrupos(gruposMap);
+      } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+      }
+    };
+
+    loadGrupos();
+  }, []);
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -45,10 +62,10 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
     return (
       <div className="empty-state">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <h3>Nenhum item cadastrado</h3>
-        <p>Clique em "Novo Item" para começar</p>
+        <h3>Selecione os filtros e clique em Consultar</h3>
+        <p>Use os filtros acima para buscar itens do estoque</p>
         <style jsx>{`
           .empty-state {
             display: flex;
@@ -88,6 +105,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
             <th>ID</th>
             <th>Descrição</th>
             <th>Tipo</th>
+            <th>Grupo</th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -100,6 +118,15 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
                 <span className={`tipo-badge tipo-${item.tipo.toLowerCase().replace(/\s+/g, '-')}`}>
                   {item.tipo}
                 </span>
+              </td>
+              <td>
+                {item.grupo_id ? (
+                  <span className="grupo-badge">
+                    {grupos.get(item.grupo_id) || `Grupo #${item.grupo_id}`}
+                  </span>
+                ) : (
+                  <span className="sem-grupo">Sem grupo</span>
+                )}
               </td>
               <td>
                 <div className="actions">
@@ -229,6 +256,22 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
 
         .tipo-badge.tipo-outros {
           background: #6b7280;
+        }
+
+        .grupo-badge {
+          display: inline-block;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+          background: #556b2f;
+          color: white;
+        }
+
+        .sem-grupo {
+          font-size: 0.75rem;
+          color: #9ca3af;
+          font-style: italic;
         }
 
         .actions {

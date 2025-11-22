@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function VendasClientes(): JSX.Element {
+export default function VendasClientes() {
   return (
     <main className="page">
       <div className="page-header">

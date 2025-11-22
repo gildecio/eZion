@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.modules.contabil.endpoints import empresas
-from app.modules.estoque.endpoints import itens
+from app.modules.estoque.endpoints import itens, grupos
 
 api_router = APIRouter()
 
@@ -16,4 +16,10 @@ api_router.include_router(
     itens.router,
     prefix="/estoque/itens",
     tags=["Estoque - Itens"]
+)
+
+api_router.include_router(
+    grupos.router,
+    prefix="/estoque/grupos",
+    tags=["Estoque - Grupos"]
 )

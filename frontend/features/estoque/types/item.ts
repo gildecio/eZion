@@ -12,6 +12,7 @@ export interface Item {
   id: number;
   descricao: string;
   tipo: TipoItem;
+  grupo_id?: number | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -19,9 +20,11 @@ export interface Item {
 export interface CreateItemDTO {
   descricao: string;
   tipo: TipoItem;
+  grupo_id?: number | null;
 }
 
 export interface UpdateItemDTO {
   descricao?: string;
   tipo?: TipoItem;
+  grupo_id?: number | null;
 }

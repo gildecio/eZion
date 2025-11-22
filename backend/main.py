@@ -6,6 +6,7 @@ from app.db.session import engine, Base
 
 # Import all models to ensure they are registered with Base
 from app.modules.contabil.models import *  # noqa
+from app.modules.estoque.models import *  # noqa
 
 # Create database tables
 Base.metadata.create_all(bind=engine)

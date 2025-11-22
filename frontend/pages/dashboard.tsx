@@ -1,4 +1,4 @@
-export default function Dashboard(): JSX.Element {
+export default function Dashboard() {
   return (
     <main className="page">
       <div className="page-header">

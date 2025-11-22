@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.db.session import get_db
 from app.modules.estoque.schemas import Item, ItemCreate, ItemUpdate
-from app.modules.estoque.repositories import item_repository
+from app.modules.estoque.repositories import item_repository, grupo_item_repository
+from app.modules.estoque.models.item import TipoItem
 
 router = APIRouter()
 
@@ -13,10 +14,18 @@ router = APIRouter()
 def listar_itens(
     skip: int = 0,
     limit: int = 100,
+    grupo_id: Optional[int] = Query(None, description="Filtrar por grupo (use 0 para itens sem grupo)"),
+    tipo: Optional[TipoItem] = Query(None, description="Filtrar por tipo de item"),
     db: Session = Depends(get_db)
 ):
-    """Lista todos os itens"""
-    itens = item_repository.get_multi(db, skip=skip, limit=limit)
+    """Lista itens com filtros opcionais"""
+    itens = item_repository.get_with_filters(
+        db, 
+        skip=skip, 
+        limit=limit,
+        grupo_id=grupo_id,
+        tipo=tipo
+    )
     return itens
 
 
@@ -41,6 +50,20 @@ def criar_item(
     db: Session = Depends(get_db)
 ):
     """Cria um novo item"""
+    # Valida se o grupo existe e é folha
+    if item_in.grupo_id:
+        grupo = grupo_item_repository.get(db, id=item_in.grupo_id)
+        if not grupo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Grupo não encontrado"
+            )
+        if not grupo.is_leaf:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O item só pode ser vinculado a um grupo folha (sem subgrupos)"
+            )
+    
     item = item_repository.create(db, obj_in=item_in)
     return item
 
@@ -58,6 +81,21 @@ def atualizar_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item não encontrado"
         )
+    
+    # Valida se o grupo existe e é folha (se fornecido)
+    if item_in.grupo_id:
+        grupo = grupo_item_repository.get(db, id=item_in.grupo_id)
+        if not grupo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Grupo não encontrado"
+            )
+        if not grupo.is_leaf:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O item só pode ser vinculado a um grupo folha (sem subgrupos)"
+            )
+    
     item = item_repository.update(db, db_obj=item, obj_in=item_in)
     return item
 

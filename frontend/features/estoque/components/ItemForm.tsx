@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
+import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
+import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
 
 interface ItemFormProps {
   item?: Item;
@@ -19,12 +21,32 @@ const TIPOS_ITEM: { value: TipoItem; label: string }[] = [
 ];
 
 export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFormProps) {
+  const [gruposLeaves, setGruposLeaves] = useState<GrupoItem[]>([]);
+  const [loadingGrupos, setLoadingGrupos] = useState(true);
+  
   const [formData, setFormData] = useState({
     descricao: item?.descricao || '',
     tipo: item?.tipo || ("Produto" as TipoItem),
+    grupo_id: item?.grupo_id || null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const loadGruposLeaves = async () => {
+      try {
+        setLoadingGrupos(true);
+        const grupos = await grupoItemService.getLeaves();
+        setGruposLeaves(grupos);
+      } catch (error) {
+        console.error('Erro ao carregar grupos:', error);
+      } finally {
+        setLoadingGrupos(false);
+      }
+    };
+
+    loadGruposLeaves();
+  }, []);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -92,6 +114,33 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
           </select>
         </label>
         {errors.tipo && <span style={styles.errorText}>{errors.tipo}</span>}
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>
+          Grupo
+          <select
+            value={formData.grupo_id || ''}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              grupo_id: e.target.value ? Number(e.target.value) : null 
+            })}
+            style={styles.select}
+            disabled={loadingGrupos}
+          >
+            <option value="">Nenhum grupo</option>
+            {gruposLeaves.map((grupo) => (
+              <option key={grupo.id} value={grupo.id}>
+                {grupo.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {loadingGrupos && (
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            Carregando grupos...
+          </span>
+        )}
       </div>
 
       <div style={styles.formActions}>

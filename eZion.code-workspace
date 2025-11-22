@@ -1,0 +1,57 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "terminal.integrated.allowChords": false,
+    "terminal.integrated.confirmOnExit": "never",
+    "task.allowAutomaticTasks": "on"
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Backend: Debug",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": [
+          "main:app",
+          "--reload",
+          "--host",
+          "0.0.0.0",
+          "--port",
+          "8000"
+        ],
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/backend"
+        },
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Frontend: Debug",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": [
+          "run",
+          "dev"
+        ],
+        "cwd": "${workspaceFolder}/frontend",
+        "console": "integratedTerminal"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "Full Stack: Debug",
+        "configurations": [
+          "Backend: Debug",
+          "Frontend: Debug"
+        ]
+      }
+    ]
+  }
+}

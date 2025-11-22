@@ -5,7 +5,7 @@ import Dropdown from '../ui/Dropdown'
 
 const items = [{ href: '/', label: 'Home' }]
 
-export default function Sidebar(): JSX.Element {
+export default function Sidebar() {
   const router = useRouter()
 
   return (
@@ -33,6 +33,7 @@ export default function Sidebar(): JSX.Element {
           href="/estoque"
           items={[
             { href: '/estoque/itens', label: 'Itens' },
+            { href: '/estoque/grupos', label: 'Grupos' },
           ]}
           className={`${router.pathname.startsWith('/estoque') ? 'active' : ''}`}
         />

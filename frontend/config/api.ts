@@ -5,12 +5,13 @@ export const API_CONFIG = {
 
 export const API_ENDPOINTS = {
   // Contábil
-  empresas: '/api/v1/contabil/empresas',
+  empresas: '/api/v1/contabil/empresas/',
   
   // Estoque
-  itens: '/api/v1/estoque/itens',
+  itens: '/api/v1/estoque/itens/',
+  grupos: '/api/v1/estoque/grupos/',
   
   // Vendas
-  clientes: '/api/v1/vendas/clientes',
-  pedidos: '/api/v1/vendas/pedidos',
+  clientes: '/api/v1/vendas/clientes/',
+  pedidos: '/api/v1/vendas/pedidos/',
 } as const;

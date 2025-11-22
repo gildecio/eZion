@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function VendasPedidos(): JSX.Element {
+export default function VendasPedidos() {
   return (
     <main className="page">
       <div className="page-header">

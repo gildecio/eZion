@@ -16,6 +16,7 @@ class TipoItem(str, Enum):
 class ItemBase(BaseModel):
     descricao: str = Field(..., min_length=1, max_length=255, description="Descrição do item")
     tipo: TipoItem = Field(..., description="Tipo do item")
+    grupo_id: int | None = Field(None, description="ID do grupo ao qual o item pertence")
 
 
 class ItemCreate(ItemBase):
@@ -25,6 +26,7 @@ class ItemCreate(ItemBase):
 class ItemUpdate(BaseModel):
     descricao: str | None = Field(None, min_length=1, max_length=255)
     tipo: TipoItem | None = None
+    grupo_id: int | None = None
 
 
 class Item(ItemBase):

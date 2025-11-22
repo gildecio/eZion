@@ -1,2 +1,2 @@
-export * from './components';
-export * from './types';
+// Export vendas components here when created
+export {};
