@@ -7,6 +7,9 @@ export const API_ENDPOINTS = {
   // Contábil
   empresas: '/api/v1/contabil/empresas',
   
+  // Estoque
+  itens: '/api/v1/estoque/itens',
+  
   // Vendas
   clientes: '/api/v1/vendas/clientes',
   pedidos: '/api/v1/vendas/pedidos',

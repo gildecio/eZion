@@ -29,6 +29,15 @@ export default function Sidebar(): JSX.Element {
         />
 
         <Dropdown
+          label="Estoque"
+          href="/estoque"
+          items={[
+            { href: '/estoque/itens', label: 'Itens' },
+          ]}
+          className={`${router.pathname.startsWith('/estoque') ? 'active' : ''}`}
+        />
+
+        <Dropdown
           label="Vendas"
           href="/vendas"
           items={[

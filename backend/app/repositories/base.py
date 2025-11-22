@@ -83,9 +83,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 detail=f"Erro de integridade: {str(e.orig)}"
             )
 
-    def delete(self, db: Session, *, id: int) -> Optional[ModelType]:
+    def remove(self, db: Session, *, id: int) -> Optional[ModelType]:
         """Delete a record"""
-        obj = db.query(self.model).get(id)
+        obj = db.query(self.model).filter(self.model.id == id).first()
         if obj:
             db.delete(obj)
             db.commit()

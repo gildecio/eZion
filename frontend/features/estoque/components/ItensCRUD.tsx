@@ -1,80 +1,69 @@
-import { useState } from 'react';
-import { useEmpresas } from '../hooks/useEmpresas';
-import EmpresaTable from '../components/EmpresaTable';
-import EmpresaForm from '../components/EmpresaForm';
-import DeleteConfirmModal from '../components/DeleteConfirmModal';
-import type { Empresa, CreateEmpresaDTO, UpdateEmpresaDTO } from '../types';
+import React, { useState } from 'react';
+import { useItens } from '../hooks';
+import ItemForm from './ItemForm';
+import ItemTable from './ItemTable';
+import DeleteConfirmModal from './DeleteConfirmModal';
+import type { Item, CreateItemDTO, UpdateItemDTO } from '../types';
 
-export default function EmpresasCRUD() {
-  const { empresas, loading, create, update, remove, refresh } = useEmpresas();
+export default function ItensCRUD() {
+  const { itens, loading, error, create, update, remove } = useItens();
   const [showForm, setShowForm] = useState(false);
-  const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null);
-  const [empresaToDelete, setEmpresaToDelete] = useState<Empresa | null>(null);
+  const [selectedItem, setSelectedItem] = useState<Item | undefined>(undefined);
+  const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreate = () => {
-    setSelectedEmpresa(null);
+    setSelectedItem(undefined);
     setShowForm(true);
   };
 
-  const handleEdit = (empresa: Empresa) => {
-    setSelectedEmpresa(empresa);
+  const handleEdit = (item: Item) => {
+    setSelectedItem(item);
     setShowForm(true);
   };
 
-  const handleDelete = (empresa: Empresa) => {
-    setEmpresaToDelete(empresa);
+  const handleDelete = (item: Item) => {
+    setItemToDelete(item);
   };
 
-  const handleSubmit = async (data: CreateEmpresaDTO | UpdateEmpresaDTO) => {
+  const handleSubmit = async (data: CreateItemDTO | UpdateItemDTO) => {
     setIsSubmitting(true);
     try {
-      if (selectedEmpresa) {
-        await update(selectedEmpresa.id, data as UpdateEmpresaDTO);
+      if (selectedItem) {
+        await update(selectedItem.id, data as UpdateItemDTO);
       } else {
-        await create(data as CreateEmpresaDTO);
+        await create(data as CreateItemDTO);
       }
       setShowForm(false);
-      setSelectedEmpresa(null);
-      await refresh();
+      setSelectedItem(undefined);
     } catch (error) {
-      console.error('Erro ao salvar empresa:', error);
-      alert('Erro ao salvar empresa. Tente novamente.');
+      console.error('Erro ao salvar item:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleConfirmDelete = async () => {
-    if (!empresaToDelete) return;
-
+    if (!itemToDelete) return;
+    
     setIsSubmitting(true);
     try {
-      await remove(empresaToDelete.id);
-      setEmpresaToDelete(null);
-      await refresh();
+      await remove(itemToDelete.id);
+      setItemToDelete(null);
     } catch (error) {
-      console.error('Erro ao excluir empresa:', error);
-      alert('Erro ao excluir empresa. Tente novamente.');
+      console.error('Erro ao excluir item:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setSelectedEmpresa(null);
-  };
-
   return (
-    <div className="empresas-crud">
+    <div className="itens-crud">
       <div className="header">
         <div>
-          <h1>Empresas</h1>
-          <p>Gerencie as empresas cadastradas no sistema</p>
-          
+          <h1>Itens</h1>
+          <p>Gerencie os itens do estoque</p>
         </div>
-        
         {!showForm && (
           <button onClick={handleCreate} className="btn-new">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -83,30 +72,48 @@ export default function EmpresasCRUD() {
             Cadastrar
           </button>
         )}
-      
       </div>
+
+      {error && (
+        <div className="error-alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
 
       <div className="content">
         {showForm ? (
           <div className="form-container">
             <div className="form-header">
-              <h2>{selectedEmpresa ? 'Editar Empresa' : 'Nova Empresa'}</h2>
-              <button onClick={handleCancel} className="btn-close" title="Fechar">
+              <h2>{selectedItem ? 'Editar Item' : 'Novo Item'}</h2>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setSelectedItem(undefined);
+                }}
+                className="btn-close"
+                title="Fechar"
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <EmpresaForm
-              empresa={selectedEmpresa || undefined}
+            <ItemForm
+              item={selectedItem}
               onSubmit={handleSubmit}
-              onCancel={handleCancel}
+              onCancel={() => {
+                setShowForm(false);
+                setSelectedItem(undefined);
+              }}
               isLoading={isSubmitting}
             />
           </div>
         ) : (
-          <EmpresaTable
-            empresas={empresas}
+          <ItemTable
+            itens={itens}
             onEdit={handleEdit}
             onDelete={handleDelete}
             isLoading={loading}
@@ -114,17 +121,17 @@ export default function EmpresasCRUD() {
         )}
       </div>
 
-      {empresaToDelete && (
+      {itemToDelete && (
         <DeleteConfirmModal
-          empresa={empresaToDelete}
+          item={itemToDelete}
           onConfirm={handleConfirmDelete}
-          onCancel={() => setEmpresaToDelete(null)}
+          onCancel={() => setItemToDelete(null)}
           isLoading={isSubmitting}
         />
       )}
 
       <style jsx>{`
-        .empresas-crud {
+        .itens-crud {
           padding: 2rem;
           max-width: 90%;
           margin: 0 auto;
@@ -138,16 +145,16 @@ export default function EmpresasCRUD() {
         }
 
         .header h1 {
-          margin: 0 0 0.25rem 0;
+          margin: 0;
           font-size: 1.875rem;
           font-weight: 700;
           color: #111827;
         }
 
         .header p {
-          margin: 0;
-          color: #6b7280;
+          margin: 0.25rem 0 0 0;
           font-size: 0.875rem;
+          color: #6b7280;
         }
 
         .btn-new {
@@ -158,17 +165,37 @@ export default function EmpresasCRUD() {
           background: #556b2f;
           color: white;
           border: none;
-          border-radius: 8px;
+          border-radius: 6px;
+          font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
-          font-size: 0.875rem;
         }
 
         .btn-new:hover {
-          background: #6b8e23;
+          background: #6d8b3c;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(85, 107, 47, 0.2);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-alert {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 1rem 1.25rem;
+          background: #fee2e2;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          color: #991b1b;
+          margin-bottom: 1.5rem;
+        }
+
+        .error-alert svg {
+          flex-shrink: 0;
+        }
+
+        .error-alert span {
+          font-size: 0.875rem;
         }
 
         .content {
@@ -217,7 +244,7 @@ export default function EmpresasCRUD() {
         }
 
         @media (max-width: 768px) {
-          .empresas-crud {
+          .itens-crud {
             padding: 1rem;
           }
 

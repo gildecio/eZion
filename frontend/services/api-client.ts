@@ -57,6 +57,14 @@ class ApiClient {
         throw error;
       }
 
+      // Para respostas 204 No Content, retornar objeto vazio
+      if (response.status === 204) {
+        return {
+          data: {} as T,
+          success: true,
+        };
+      }
+
       const data = await response.json();
       return {
         data,
