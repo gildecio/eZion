@@ -28,13 +28,16 @@ export function useItens(filters?: UseItensFilters) {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters?.grupo_id, filters?.tipo]);
 
   useEffect(() => {
     if (filters && Object.keys(filters).length > 0) {
       loadItens();
+    } else {
+      setItens([]);
+      setHasConsulted(false);
     }
-  }, [loadItens, filters]);
+  }, [filters?.grupo_id, filters?.tipo]);
 
   const create = async (data: CreateItemDTO): Promise<Item> => {
     try {

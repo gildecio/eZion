@@ -109,6 +109,13 @@ def criar_grupo(grupo_data: GrupoItemCreate, db: Session = Depends(get_db)):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Grupo pai com ID {grupo_data.parent_id} não encontrado"
             )
+        
+        # Verifica se o pai possui itens vinculados (não pode adicionar filho a grupo com itens)
+        if parent.itens and len(parent.itens) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Não é possível adicionar subgrupo. O grupo '{parent.nome}' já possui {len(parent.itens)} itens vinculados e não pode ter subgrupos."
+            )
     
     grupo = grupo_item_repository.create(db, obj_in=grupo_data)
     
@@ -147,12 +154,27 @@ def atualizar_grupo(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Grupo pai com ID {grupo_data.parent_id} não encontrado"
                 )
+            
+            # Verifica se o pai possui itens vinculados (não pode adicionar filho a grupo com itens)
+            if parent.itens and len(parent.itens) > 0:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Não é possível mover para este grupo. O grupo '{parent.nome}' já possui {len(parent.itens)} itens vinculados e não pode ter subgrupos."
+                )
         
         # Verifica referência circular
         if grupo_item_repository.has_circular_reference(db, grupo_id, grupo_data.parent_id):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Operação criaria referência circular na hierarquia"
+            )
+        
+        # Verifica se o grupo atual já possui filhos (não pode mover grupo que já é pai)
+        children = grupo_item_repository.get_children(db, grupo_id)
+        if children and len(children) > 0:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Não é possível mover este grupo. Ele já possui {len(children)} subgrupos e não pode se tornar filho de outro grupo."
             )
     
     grupo_atualizado = grupo_item_repository.update(db, db_obj=grupo, obj_in=grupo_data)
@@ -192,4 +214,5 @@ def deletar_grupo(grupo_id: int, db: Session = Depends(get_db)):
             detail=f"Não é possível excluir grupo com {len(grupo.itens)} itens vinculados"
         )
     
-    grupo_item_repository.remove(db, grupo_id)
+    grupo_item_repository.remove(db, id=grupo_id)
+    return None

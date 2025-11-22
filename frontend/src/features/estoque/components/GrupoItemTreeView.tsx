@@ -4,24 +4,34 @@ interface GrupoItemTreeViewProps {
   nodes: GrupoItemTree[];
   onEdit: (grupo: GrupoItemTree) => void;
   onDelete: (grupo: GrupoItemTree) => void;
+  onNodeClick?: (grupo: GrupoItemTree) => void;
+  selectedId?: number | null;
 }
 
 const TreeNode = ({ 
   node, 
   level, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onNodeClick,
+  selectedId
 }: { 
   node: GrupoItemTree; 
   level: number;
   onEdit: (grupo: GrupoItemTree) => void;
   onDelete: (grupo: GrupoItemTree) => void;
+  onNodeClick?: (grupo: GrupoItemTree) => void;
+  selectedId?: number | null;
 }) => {
   const hasChildren = node.children && node.children.length > 0;
   
   return (
     <>
-      <tr className="tree-row">
+      <tr 
+        className={`tree-row ${selectedId === node.id ? 'selected' : ''}`}
+        onClick={() => onNodeClick?.(node)}
+        style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
+      >
         <td className="name-cell">
           <span className="indent" style={{ width: `${level * 24}px` }} />
           {hasChildren && <span className="folder-icon">📁</span>}
@@ -60,16 +70,28 @@ const TreeNode = ({
           level={level + 1}
           onEdit={onEdit}
           onDelete={onDelete}
+          onNodeClick={onNodeClick}
+          selectedId={selectedId}
         />
       ))}
 
       <style jsx>{`
         .tree-row {
           border-bottom: 1px solid #e5e7eb;
+          transition: background-color 0.15s;
         }
 
         .tree-row:hover {
           background: #f9fafb;
+        }
+
+        .tree-row.selected {
+          background: #f0f9ff;
+          border-left: 3px solid #556b2f;
+        }
+
+        .tree-row.selected:hover {
+          background: #e0f2fe;
         }
 
         .name-cell {
@@ -157,7 +179,7 @@ const TreeNode = ({
   );
 };
 
-export const GrupoItemTreeView = ({ nodes, onEdit, onDelete }: GrupoItemTreeViewProps) => {
+export const GrupoItemTreeView = ({ nodes, onEdit, onDelete, onNodeClick, selectedId }: GrupoItemTreeViewProps) => {
   return (
     <div className="tree-container">
       <table className="tree-table">
@@ -185,6 +207,8 @@ export const GrupoItemTreeView = ({ nodes, onEdit, onDelete }: GrupoItemTreeView
                 level={0}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onNodeClick={onNodeClick}
+                selectedId={selectedId}
               />
             ))
           )}

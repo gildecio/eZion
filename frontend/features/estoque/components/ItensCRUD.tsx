@@ -88,12 +88,6 @@ export default function ItensCRUD() {
     });
   };
 
-  const handleLimparFiltros = () => {
-    setFiltroGrupo(null);
-    setFiltroTipo(null);
-    setFiltrosAplicados(undefined);
-  };
-
   return (
     <div className="itens-crud">
       <div className="header">
@@ -166,24 +160,6 @@ export default function ItensCRUD() {
             </svg>
             Consultar
           </button>
-
-          {(filtrosAplicados !== undefined) && (
-            <>
-              <button
-                onClick={handleLimparFiltros}
-                className="btn-clear-filters"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Limpar filtros
-              </button>
-
-              <div className="filter-results">
-                {itens.length} {itens.length === 1 ? 'item encontrado' : 'itens encontrados'}
-              </div>
-            </>
-          )}
         </div>
       )}
 
@@ -366,40 +342,6 @@ export default function ItensCRUD() {
           background: #6b8e23;
           transform: translateY(-1px);
           box-shadow: 0 4px 12px rgba(85, 107, 47, 0.2);
-        }
-
-        .btn-clear-filters {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.625rem 1rem;
-          background: white;
-          color: #6b7280;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-          height: fit-content;
-        }
-
-        .btn-clear-filters:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
-          color: #374151;
-        }
-
-        .filter-results {
-          display: flex;
-          align-items: center;
-          padding: 0.625rem 1rem;
-          background: #556b2f;
-          color: white;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-          height: fit-content;
         }
 
         .content {
