@@ -281,201 +281,73 @@ export default function LocaisCRUD() {
       <style jsx>{`
         .locais-crud {
           padding: 2rem;
+          max-width: 90%;
+          margin: 0 auto;
         }
 
         .header {
           display: flex;
           justify-content: space-between;
-          align-items: start;
+          align-items: center;
           margin-bottom: 2rem;
         }
 
         .header h1 {
+          margin: 0;
           font-size: 1.875rem;
           font-weight: 700;
           color: #111827;
-          margin: 0 0 0.5rem 0;
         }
 
         .header p {
+          margin: 0.25rem 0 0 0;
+          font-size: 0.875rem;
           color: #6b7280;
-          margin: 0;
         }
 
         .btn-new {
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.625rem 1.25rem;
-          background: #2563eb;
+          padding: 0.75rem 1.5rem;
+          background: #556b2f;
           color: white;
           border: none;
-          border-radius: 0.5rem;
+          border-radius: 6px;
+          font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
         .btn-new:hover {
-          background: #1d4ed8;
+          background: #6d8b3c;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .error-alert {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          padding: 1rem;
-          background: #fef2f2;
+          padding: 1rem 1.25rem;
+          background: #fee2e2;
           border: 1px solid #fecaca;
-          border-radius: 0.5rem;
+          border-radius: 8px;
           color: #991b1b;
           margin-bottom: 1.5rem;
         }
 
-        .form-container {
-          background: white;
-          border-radius: 0.75rem;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          padding: 1.5rem;
-        }
-
-        .form-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .form-header h2 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #111827;
-          margin: 0;
-        }
-
-        .btn-close {
-          padding: 0.5rem;
-          background: #f3f4f6;
-          border: none;
-          border-radius: 0.375rem;
-          cursor: pointer;
-          color: #6b7280;
-          transition: all 0.2s;
-        }
-
-        .btn-close:hover {
-          background: #e5e7eb;
-          color: #111827;
-        }
-
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 2fr;
-          gap: 1rem;
-        }
-
-        .form-group {
-          margin-bottom: 1.25rem;
-        }
-
-        .form-group label {
-          display: block;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group textarea {
-          width: 100%;
-          padding: 0.625rem 0.75rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-size: 0.875rem;
-          transition: all 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #2563eb;
-          ring: 2px;
-          ring-color: #bfdbfe;
-        }
-
-        .form-group textarea {
-          resize: vertical;
-          min-height: 80px;
-        }
-
-        .checkbox-group label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-        }
-
-        .checkbox-group input[type="checkbox"] {
-          width: auto;
-          cursor: pointer;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 0.75rem;
-          justify-content: flex-end;
-          margin-top: 1.5rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .btn-cancel {
-          padding: 0.625rem 1.25rem;
-          background: white;
-          border: 1px solid #d1d5db;
-          border-radius: 0.375rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-cancel:hover {
-          background: #f9fafb;
-        }
-
-        .btn-submit {
-          padding: 0.625rem 1.25rem;
-          background: #2563eb;
-          color: white;
-          border: none;
-          border-radius: 0.375rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          background: #1d4ed8;
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
         .content {
           background: white;
-          border-radius: 0.75rem;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           overflow: hidden;
         }
 
         .loading {
-          padding: 3rem;
           text-align: center;
+          padding: 3rem;
           color: #6b7280;
         }
 
@@ -490,57 +362,51 @@ export default function LocaisCRUD() {
 
         thead {
           background: #f9fafb;
-          border-bottom: 1px solid #e5e7eb;
         }
 
         th {
           padding: 0.75rem 1rem;
           text-align: left;
-          font-size: 0.75rem;
           font-weight: 600;
-          color: #6b7280;
+          color: #374151;
+          font-size: 0.875rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          border-bottom: 2px solid #e5e7eb;
         }
 
-        tbody tr {
-          border-bottom: 1px solid #f3f4f6;
-          transition: background 0.2s;
+        td {
+          padding: 0.875rem 1rem;
+          border-bottom: 1px solid #e5e7eb;
+          color: #1f2937;
         }
 
         tbody tr:hover {
           background: #f9fafb;
         }
 
-        td {
-          padding: 1rem;
-          font-size: 0.875rem;
-          color: #374151;
-        }
-
-        td.empty {
+        .empty {
           text-align: center;
-          padding: 3rem;
           color: #9ca3af;
+          padding: 3rem;
         }
 
         .badge-codigo {
           display: inline-block;
-          padding: 0.25rem 0.625rem;
+          padding: 0.25rem 0.75rem;
           background: #dbeafe;
           color: #1e40af;
-          border-radius: 0.375rem;
+          border-radius: 12px;
+          font-size: 0.875rem;
           font-weight: 600;
-          font-size: 0.75rem;
-          font-family: monospace;
         }
 
         .badge-status {
           display: inline-block;
-          padding: 0.25rem 0.625rem;
-          border-radius: 9999px;
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.875rem;
           font-weight: 500;
-          font-size: 0.75rem;
         }
 
         .badge-status.active {
@@ -561,27 +427,169 @@ export default function LocaisCRUD() {
         .btn-edit,
         .btn-delete {
           padding: 0.5rem;
-          background: transparent;
           border: none;
-          border-radius: 0.375rem;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-edit {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+
+        .btn-edit:hover {
+          background: #bfdbfe;
+        }
+
+        .btn-delete {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+
+        .btn-delete:hover {
+          background: #fecaca;
+        }
+
+        .form-container {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          padding: 2rem;
+        }
+
+        .form-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .form-header h2 {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .btn-close {
+          padding: 0.5rem;
+          background: #f3f4f6;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #6b7280;
+        }
+
+        .btn-close:hover {
+          background: #e5e7eb;
+          color: #374151;
+        }
+
+        form {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 1rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        label {
+          font-weight: 500;
+          color: #374151;
+          font-size: 0.875rem;
+        }
+
+        input,
+        textarea {
+          padding: 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 1rem;
+          transition: all 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+          outline: none;
+          border-color: #556b2f;
+          box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.1);
+        }
+
+        textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .checkbox-group label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+          width: auto;
+          cursor: pointer;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          margin-top: 1rem;
+        }
+
+        .btn-cancel,
+        .btn-submit {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 6px;
+          font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
-        .btn-edit {
-          color: #2563eb;
+        .btn-cancel {
+          background: #f3f4f6;
+          color: #374151;
         }
 
-        .btn-edit:hover {
-          background: #dbeafe;
+        .btn-cancel:hover {
+          background: #e5e7eb;
         }
 
-        .btn-delete {
-          color: #dc2626;
+        .btn-submit {
+          background: #556b2f;
+          color: white;
         }
 
-        .btn-delete:hover {
-          background: #fee2e2;
+        .btn-submit:hover {
+          background: #6d8b3c;
+        }
+
+        .btn-submit:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
 
         @media (max-width: 768px) {
@@ -591,19 +599,21 @@ export default function LocaisCRUD() {
 
           .header {
             flex-direction: column;
+            align-items: flex-start;
             gap: 1rem;
+          }
+
+          .btn-new {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .form-container {
+            padding: 1rem;
           }
 
           .form-row {
             grid-template-columns: 1fr;
-          }
-
-          .table-wrapper {
-            overflow-x: scroll;
-          }
-
-          table {
-            min-width: 600px;
           }
         }
       `}</style>
