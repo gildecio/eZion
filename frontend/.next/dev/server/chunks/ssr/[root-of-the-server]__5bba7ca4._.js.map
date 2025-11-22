@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/gildecio/projetos/eZion/frontend/pages/vendas/clientes.js"],"sourcesContent":["export default function VendasClientes(){\n  return (\n    <main className=\"page\">\n      <div className=\"page-header\">\n        <h1>Vendas — Clientes</h1>\n        <p className=\"muted\">Lista de clientes relacionados a vendas.</p>\n      </div>\n      <section className=\"panel\">\n        <p>Conteúdo de exemplo: clientes.</p>\n      </section>\n    </main>\n  )\n}\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBACE,qKAAC;QAAK,WAAU;;0BACd,qKAAC;gBAAI,WAAU;;kCACb,qKAAC;kCAAG;;;;;;kCACJ,qKAAC;wBAAE,WAAU;kCAAQ;;;;;;;;;;;;0BAEvB,qKAAC;gBAAQ,WAAU;0BACjB,cAAA,qKAAC;8BAAE;;;;;;;;;;;;;;;;;AAIX"}}]
+}

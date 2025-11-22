@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/gildecio/projetos/eZion/frontend/components/HomeEmpty.tsx"],"sourcesContent":["import React from 'react'\n\nexport default function HomeEmpty(): JSX.Element {\n  return (\n    <main className=\"page empty-home\">\n      {/* Página inicial vazia - use este componente como ponto de partida */}\n    </main>\n  )\n}\n"],"names":[],"mappings":";;;;;;AAEe,SAAS;IACtB,qBACE,qKAAC;QAAK,WAAU;;;;;;AAIpB"}},
+    {"offset": {"line": 23, "column": 0}, "map": {"version":3,"sources":["file:///home/gildecio/projetos/eZion/frontend/pages/index.tsx"],"sourcesContent":["import HomeEmpty from '../components/HomeEmpty'\n\nexport default function Home() {\n  return <HomeEmpty />\n}\n"],"names":[],"mappings":";;;;;AAAA;;;AAEe,SAAS;IACtB,qBAAO,qKAAC,4HAAS;;;;;AACnB"}}]
+}
