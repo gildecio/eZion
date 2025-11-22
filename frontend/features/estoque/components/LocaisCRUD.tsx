@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { localService } from '../services/local-service';
-import { Local, LocalCreate, LocalUpdate } from '../types/local';
 import { DeleteConfirmModal } from '@/shared/components/DeleteConfirmModal';
+import type { Local, LocalCreate, LocalUpdate } from '../types/local';
 
 export default function LocaisCRUD() {
   const [locais, setLocais] = useState<Local[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingLocal, setEditingLocal] = useState<Local | null>(null);
+  const [deletingLocal, setDeletingLocal] = useState<Local | null>(null);
   const [formData, setFormData] = useState<LocalCreate>({
     codigo: '',
     nome: '',
     descricao: '',
     ativo: true,
   });
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     loadLocais();
@@ -23,294 +24,589 @@ export default function LocaisCRUD() {
   const loadLocais = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await localService.getAll();
       setLocais(data);
-    } catch (error) {
-      console.error('Erro ao carregar locais:', error);
-      alert('Erro ao carregar locais');
+    } catch (err: any) {
+      setError(err.message || 'Erro ao carregar locais');
     } finally {
       setLoading(false);
     }
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.codigo?.trim()) {
-      newErrors.codigo = 'Código é obrigatório';
-    } else if (formData.codigo.length > 20) {
-      newErrors.codigo = 'Código deve ter no máximo 20 caracteres';
-    }
-
-    if (!formData.nome?.trim()) {
-      newErrors.nome = 'Nome é obrigatório';
-    } else if (formData.nome.length > 100) {
-      newErrors.nome = 'Nome deve ter no máximo 100 caracteres';
-    }
-
-    if (formData.descricao && formData.descricao.length > 255) {
-      newErrors.descricao = 'Descrição deve ter no máximo 255 caracteres';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      if (editingId) {
-        await localService.update(editingId, formData);
-      } else {
-        await localService.create(formData);
-      }
-      await loadLocais();
-      resetForm();
-    } catch (error: any) {
-      console.error('Erro ao salvar local:', error);
-      const message = error.response?.data?.detail || 'Erro ao salvar local';
-      alert(message);
-    } finally {
-      setLoading(false);
-    }
+  const handleCreate = () => {
+    setEditingLocal(null);
+    setFormData({ codigo: '', nome: '', descricao: '', ativo: true });
+    setShowForm(true);
   };
 
   const handleEdit = (local: Local) => {
-    setEditingId(local.id);
+    setEditingLocal(local);
     setFormData({
       codigo: local.codigo,
       nome: local.nome,
       descricao: local.descricao || '',
       ativo: local.ativo,
     });
-    setErrors({});
+    setShowForm(true);
   };
 
-  const handleDelete = async () => {
-    if (!deletingId) return;
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
       setLoading(true);
-      await localService.delete(deletingId);
+      setError(null);
+      
+      if (editingLocal) {
+        await localService.update(editingLocal.id, formData);
+      } else {
+        await localService.create(formData);
+      }
+      
       await loadLocais();
-      setDeletingId(null);
-    } catch (error: any) {
-      console.error('Erro ao deletar local:', error);
-      const message = error.response?.data?.detail || 'Erro ao deletar local';
-      alert(message);
+      setShowForm(false);
+      setEditingLocal(null);
+      setFormData({ codigo: '', nome: '', descricao: '', ativo: true });
+    } catch (err: any) {
+      setError(err.message || 'Erro ao salvar local');
     } finally {
       setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      codigo: '',
-      nome: '',
-      descricao: '',
-      ativo: true,
-    });
-    setEditingId(null);
-    setErrors({});
+  const handleDelete = async () => {
+    if (!deletingLocal) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      await localService.delete(deletingLocal.id);
+      await loadLocais();
+      setDeletingLocal(null);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao excluir local');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Formulário */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">
-          {editingId ? 'Editar Local' : 'Novo Local'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Código *
-              </label>
-              <input
-                type="text"
-                value={formData.codigo}
-                onChange={(e) =>
-                  setFormData({ ...formData, codigo: e.target.value })
-                }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.codigo ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Ex: DEP01"
-                maxLength={20}
-              />
-              {errors.codigo && (
-                <p className="text-red-500 text-sm mt-1">{errors.codigo}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome *
-              </label>
-              <input
-                type="text"
-                value={formData.nome}
-                onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
-                }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.nome ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Ex: Depósito Principal"
-                maxLength={100}
-              />
-              {errors.nome && (
-                <p className="text-red-500 text-sm mt-1">{errors.nome}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Descrição
-            </label>
-            <textarea
-              value={formData.descricao}
-              onChange={(e) =>
-                setFormData({ ...formData, descricao: e.target.value })
-              }
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.descricao ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Descrição do local"
-              rows={3}
-              maxLength={255}
-            />
-            {errors.descricao && (
-              <p className="text-red-500 text-sm mt-1">{errors.descricao}</p>
-            )}
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="ativo"
-              checked={formData.ativo}
-              onChange={(e) =>
-                setFormData({ ...formData, ativo: e.target.checked })
-              }
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700">
-              Ativo
-            </label>
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400"
-            >
-              {loading ? 'Salvando...' : editingId ? 'Atualizar' : 'Criar'}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Cancelar
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
-
-      {/* Listagem */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Locais Cadastrados</h2>
-        {loading ? (
-          <p className="text-gray-500">Carregando...</p>
-        ) : locais.length === 0 ? (
-          <p className="text-gray-500">Nenhum local cadastrado</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Código
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Descrição
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {locais.map((local) => (
-                  <tr key={local.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {local.codigo}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {local.nome}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {local.descricao || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          local.ativo
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {local.ativo ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(local)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(local.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <div className="locais-crud">
+      <div className="header">
+        <div>
+          <h1>Locais de Armazenamento</h1>
+          <p>Gerencie os locais onde os itens do estoque são armazenados</p>
+        </div>
+        {!showForm && (
+          <button onClick={handleCreate} className="btn-new">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Cadastrar
+          </button>
         )}
       </div>
 
-      {/* Modal de Confirmação de Exclusão */}
-      {deletingId && (
+      {error && (
+        <div className="error-alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {showForm ? (
+        <div className="form-container">
+          <div className="form-header">
+            <h2>{editingLocal ? 'Editar Local' : 'Novo Local'}</h2>
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setEditingLocal(null);
+              }}
+              className="btn-close"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="codigo">Código *</label>
+                <input
+                  id="codigo"
+                  type="text"
+                  value={formData.codigo}
+                  onChange={(e) => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
+                  maxLength={20}
+                  required
+                  placeholder="Ex: DEP01, ARM01"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="nome">Nome *</label>
+                <input
+                  id="nome"
+                  type="text"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  maxLength={100}
+                  required
+                  placeholder="Ex: Depósito Principal"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="descricao">Descrição</label>
+              <textarea
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                maxLength={255}
+                rows={3}
+                placeholder="Descrição detalhada do local"
+              />
+            </div>
+
+            <div className="form-group checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={formData.ativo}
+                  onChange={(e) => setFormData({ ...formData, ativo: e.target.checked })}
+                />
+                <span>Ativo</span>
+              </label>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingLocal(null);
+                }}
+                className="btn-cancel"
+              >
+                Cancelar
+              </button>
+              <button type="submit" className="btn-submit" disabled={loading}>
+                {editingLocal ? 'Atualizar' : 'Cadastrar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="content">
+          {loading ? (
+            <div className="loading">Carregando...</div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Descrição</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {locais.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="empty">
+                        Nenhum local cadastrado
+                      </td>
+                    </tr>
+                  ) : (
+                    locais.map((local) => (
+                      <tr key={local.id}>
+                        <td>
+                          <span className="badge-codigo">{local.codigo}</span>
+                        </td>
+                        <td>{local.nome}</td>
+                        <td>{local.descricao || '-'}</td>
+                        <td>
+                          <span className={`badge-status ${local.ativo ? 'active' : 'inactive'}`}>
+                            {local.ativo ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </td>
+                        <td className="actions">
+                          <button
+                            onClick={() => handleEdit(local)}
+                            className="btn-edit"
+                            title="Editar"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => setDeletingLocal(local)}
+                            className="btn-delete"
+                            title="Excluir"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {deletingLocal && (
         <DeleteConfirmModal
-          itemName={locais.find(l => l.id === deletingId)?.nome || 'este local'}
+          itemName={deletingLocal.nome}
           onConfirm={handleDelete}
-          onCancel={() => setDeletingId(null)}
+          onCancel={() => setDeletingLocal(null)}
         />
       )}
+
+      <style jsx>{`
+        .locais-crud {
+          padding: 2rem;
+        }
+
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: start;
+          margin-bottom: 2rem;
+        }
+
+        .header h1 {
+          font-size: 1.875rem;
+          font-weight: 700;
+          color: #111827;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .header p {
+          color: #6b7280;
+          margin: 0;
+        }
+
+        .btn-new {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 1.25rem;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-new:hover {
+          background: #1d4ed8;
+        }
+
+        .error-alert {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 1rem;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 0.5rem;
+          color: #991b1b;
+          margin-bottom: 1.5rem;
+        }
+
+        .form-container {
+          background: white;
+          border-radius: 0.75rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          padding: 1.5rem;
+        }
+
+        .form-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .form-header h2 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #111827;
+          margin: 0;
+        }
+
+        .btn-close {
+          padding: 0.5rem;
+          background: #f3f4f6;
+          border: none;
+          border-radius: 0.375rem;
+          cursor: pointer;
+          color: #6b7280;
+          transition: all 0.2s;
+        }
+
+        .btn-close:hover {
+          background: #e5e7eb;
+          color: #111827;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 1rem;
+        }
+
+        .form-group {
+          margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+          width: 100%;
+          padding: 0.625rem 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.375rem;
+          font-size: 0.875rem;
+          transition: all 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #2563eb;
+          ring: 2px;
+          ring-color: #bfdbfe;
+        }
+
+        .form-group textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+
+        .checkbox-group label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+          width: auto;
+          cursor: pointer;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: flex-end;
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-cancel {
+          padding: 0.625rem 1.25rem;
+          background: white;
+          border: 1px solid #d1d5db;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+          background: #f9fafb;
+        }
+
+        .btn-submit {
+          padding: 0.625rem 1.25rem;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+          background: #1d4ed8;
+        }
+
+        .btn-submit:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .content {
+          background: white;
+          border-radius: 0.75rem;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+
+        .loading {
+          padding: 3rem;
+          text-align: center;
+          color: #6b7280;
+        }
+
+        .table-wrapper {
+          overflow-x: auto;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        thead {
+          background: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+          padding: 0.75rem 1rem;
+          text-align: left;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        tbody tr {
+          border-bottom: 1px solid #f3f4f6;
+          transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+          background: #f9fafb;
+        }
+
+        td {
+          padding: 1rem;
+          font-size: 0.875rem;
+          color: #374151;
+        }
+
+        td.empty {
+          text-align: center;
+          padding: 3rem;
+          color: #9ca3af;
+        }
+
+        .badge-codigo {
+          display: inline-block;
+          padding: 0.25rem 0.625rem;
+          background: #dbeafe;
+          color: #1e40af;
+          border-radius: 0.375rem;
+          font-weight: 600;
+          font-size: 0.75rem;
+          font-family: monospace;
+        }
+
+        .badge-status {
+          display: inline-block;
+          padding: 0.25rem 0.625rem;
+          border-radius: 9999px;
+          font-weight: 500;
+          font-size: 0.75rem;
+        }
+
+        .badge-status.active {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        .badge-status.inactive {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+
+        .actions {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .btn-edit,
+        .btn-delete {
+          padding: 0.5rem;
+          background: transparent;
+          border: none;
+          border-radius: 0.375rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .btn-edit {
+          color: #2563eb;
+        }
+
+        .btn-edit:hover {
+          background: #dbeafe;
+        }
+
+        .btn-delete {
+          color: #dc2626;
+        }
+
+        .btn-delete:hover {
+          background: #fee2e2;
+        }
+
+        @media (max-width: 768px) {
+          .locais-crud {
+            padding: 1rem;
+          }
+
+          .header {
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .table-wrapper {
+            overflow-x: scroll;
+          }
+
+          table {
+            min-width: 600px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
