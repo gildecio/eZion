@@ -13,6 +13,13 @@ from .embalagem_item import (
     EmbalagemItemUpdate,
     EmbalagemItemWithUnidade
 )
+from .local import Local, LocalCreate, LocalUpdate
+from .lote import Lote, LoteCreate, LoteUpdate
+from .movimentacao import (
+    Movimentacao, MovimentacaoCreate, MovimentacaoUpdate, 
+    MovimentacaoDetalhada, TipoMovimentacao
+)
+from .saldo import Saldo, SaldoCreate, SaldoUpdate, SaldoDetalhado
 
 __all__ = [
     "Item",
@@ -30,5 +37,9 @@ __all__ = [
     "EmbalagemItem",
     "EmbalagemItemCreate",
     "EmbalagemItemUpdate",
-    "EmbalagemItemWithUnidade"
+    "EmbalagemItemWithUnidade",
+    "Local", "LocalCreate", "LocalUpdate",
+    "Lote", "LoteCreate", "LoteUpdate",
+    "Movimentacao", "MovimentacaoCreate", "MovimentacaoUpdate", "MovimentacaoDetalhada", "TipoMovimentacao",
+    "Saldo", "SaldoCreate", "SaldoUpdate", "SaldoDetalhado",
 ]

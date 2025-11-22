@@ -13,6 +13,9 @@ export const API_ENDPOINTS = {
   unidades: '/api/v1/estoque/unidades/',
   embalagens: '/api/v1/estoque/embalagens/',
   locais: '/api/v1/estoque/locais/',
+  lotes: '/api/v1/estoque/lotes/',
+  movimentacoes: '/api/v1/estoque/movimentacoes/',
+  saldos: '/api/v1/estoque/saldos/',
   
   // Vendas
   clientes: '/api/v1/vendas/clientes/',

@@ -56,6 +56,9 @@ export default function Sidebar() {
             { href: '/estoque/unidades', label: 'Unidades', icon: 'scale' },
             { href: '/estoque/embalagens', label: 'Embalagens', icon: 'package' },
             { href: '/estoque/locais', label: 'Locais', icon: 'location' },
+            { href: '/estoque/lotes', label: 'Lotes', icon: 'clipboard' },
+            { href: '/estoque/movimentacoes', label: 'Movimentações', icon: 'arrows' },
+            { href: '/estoque/saldos', label: 'Saldos', icon: 'chart' },
           ]}
           className={`${router.pathname.startsWith('/estoque') ? 'active' : ''}`}
         />

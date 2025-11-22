@@ -3,6 +3,8 @@ import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
 import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
 import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
 import { useUnidades } from '../hooks';
+import { localService } from '../services/local-service';
+import type { Local } from '../types/local';
 
 interface ItemFormProps {
   item?: Item;
@@ -24,13 +26,18 @@ const TIPOS_ITEM: { value: TipoItem; label: string }[] = [
 export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFormProps) {
   const [gruposLeaves, setGruposLeaves] = useState<GrupoItem[]>([]);
   const [loadingGrupos, setLoadingGrupos] = useState(true);
+  const [locais, setLocais] = useState<Local[]>([]);
+  const [loadingLocais, setLoadingLocais] = useState(true);
   const { unidades, loading: loadingUnidades } = useUnidades();
   
   const [formData, setFormData] = useState({
+    codigo: item?.codigo || '',
     descricao: item?.descricao || '',
     tipo: item?.tipo || ("Produto" as TipoItem),
     grupo_id: item?.grupo_id || null,
     unidade_padrao_id: item?.unidade_padrao_id || null,
+    local_padrao_entrada_id: item?.local_padrao_entrada_id || 0,
+    local_padrao_saida_id: item?.local_padrao_saida_id || 0,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,11 +55,28 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
       }
     };
 
+    const loadLocais = async () => {
+      try {
+        setLoadingLocais(true);
+        const locaisData = await localService.getAll(true);
+        setLocais(locaisData);
+      } catch (error) {
+        console.error('Erro ao carregar locais:', error);
+      } finally {
+        setLoadingLocais(false);
+      }
+    };
+
     loadGruposLeaves();
+    loadLocais();
   }, []);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
+
+    if (!formData.codigo.trim()) {
+      newErrors.codigo = 'Código é obrigatório';
+    }
 
     if (!formData.descricao.trim()) {
       newErrors.descricao = 'Descrição é obrigatória';
@@ -80,6 +104,24 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
+      <div style={styles.formGroup}>
+        <label style={styles.label}>
+          Código *
+          <input
+            type="text"
+            value={formData.codigo}
+            onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+            style={{
+              ...styles.input,
+              ...(errors.codigo ? styles.inputError : {})
+            }}
+            placeholder="Digite o código do item"
+            maxLength={50}
+          />
+        </label>
+        {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
+      </div>
+
       <div style={styles.formGroup}>
         <label style={styles.label}>
           Descrição *
@@ -169,6 +211,60 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
         {loadingUnidades && (
           <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
             Carregando unidades...
+          </span>
+        )}
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>
+          Local Padrão de Entrada
+          <select
+            value={formData.local_padrao_entrada_id}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              local_padrao_entrada_id: Number(e.target.value)
+            })}
+            style={styles.select}
+            disabled={loadingLocais}
+          >
+            <option value={0}>Local Padrão (0)</option>
+            {locais.map((local) => (
+              <option key={local.id} value={local.id}>
+                {local.codigo} - {local.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {loadingLocais && (
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            Carregando locais...
+          </span>
+        )}
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>
+          Local Padrão de Saída
+          <select
+            value={formData.local_padrao_saida_id}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              local_padrao_saida_id: Number(e.target.value)
+            })}
+            style={styles.select}
+            disabled={loadingLocais}
+          >
+            <option value={0}>Local Padrão (0)</option>
+            {locais.map((local) => (
+              <option key={local.id} value={local.id}>
+                {local.codigo} - {local.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+        {loadingLocais && (
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            Carregando locais...
           </span>
         )}
       </div>

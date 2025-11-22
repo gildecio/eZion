@@ -20,7 +20,7 @@ class LocalUpdate(BaseModel):
     ativo: Optional[bool] = None
 
 
-class LocalInDB(LocalBase):
+class Local(LocalBase):
     id: int
 
     class Config:

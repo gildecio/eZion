@@ -102,7 +102,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
       <table className="item-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Código</th>
             <th>Descrição</th>
             <th>Tipo</th>
             <th>Grupo</th>
@@ -112,7 +112,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
         <tbody>
           {itens.map((item) => (
             <tr key={item.id}>
-              <td>{item.id}</td>
+              <td>{item.codigo}</td>
               <td>{item.descricao}</td>
               <td>
                 <span className={`tipo-badge tipo-${item.tipo.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -182,7 +182,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
         }
 
         .item-table th:nth-child(1) {
-          width: 80px;
+          width: 150px;
         }
 
         .item-table th:nth-child(2) {

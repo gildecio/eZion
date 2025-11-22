@@ -14,10 +14,13 @@ class TipoItem(str, Enum):
 
 
 class ItemBase(BaseModel):
+    codigo: str = Field(..., min_length=1, max_length=50, description="Código do item")
     descricao: str = Field(..., min_length=1, max_length=255, description="Descrição do item")
     tipo: TipoItem = Field(..., description="Tipo do item")
     grupo_id: int | None = Field(None, description="ID do grupo ao qual o item pertence")
     unidade_padrao_id: int | None = Field(None, description="ID da unidade padrão do item")
+    local_padrao_entrada_id: int = Field(default=0, description="ID do local padrão de entrada")
+    local_padrao_saida_id: int = Field(default=0, description="ID do local padrão de saída")
 
 
 class ItemCreate(ItemBase):
@@ -25,10 +28,13 @@ class ItemCreate(ItemBase):
 
 
 class ItemUpdate(BaseModel):
+    codigo: str | None = Field(None, min_length=1, max_length=50)
     descricao: str | None = Field(None, min_length=1, max_length=255)
     tipo: TipoItem | None = None
     grupo_id: int | None = None
     unidade_padrao_id: int | None = None
+    local_padrao_entrada_id: int | None = None
+    local_padrao_saida_id: int | None = None
 
 
 class Item(ItemBase):
