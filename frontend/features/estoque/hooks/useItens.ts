@@ -31,12 +31,8 @@ export function useItens(filters?: UseItensFilters) {
   }, [filters?.grupo_id, filters?.tipo]);
 
   useEffect(() => {
-    if (filters && Object.keys(filters).length > 0) {
-      loadItens();
-    } else {
-      setItens([]);
-      setHasConsulted(false);
-    }
+    // Sempre carregar itens, independente de filtros
+    loadItens();
   }, [filters?.grupo_id, filters?.tipo]);
 
   const create = async (data: CreateItemDTO): Promise<Item> => {

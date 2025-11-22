@@ -6,6 +6,13 @@ from .grupo_item import (
     GrupoItemTree,
     GrupoItemWithItems
 )
+from .unidade import Unidade, UnidadeCreate, UnidadeUpdate
+from .embalagem_item import (
+    EmbalagemItem,
+    EmbalagemItemCreate,
+    EmbalagemItemUpdate,
+    EmbalagemItemWithUnidade
+)
 
 __all__ = [
     "Item",
@@ -16,5 +23,12 @@ __all__ = [
     "GrupoItemCreate",
     "GrupoItemUpdate",
     "GrupoItemTree",
-    "GrupoItemWithItems"
+    "GrupoItemWithItems",
+    "Unidade",
+    "UnidadeCreate",
+    "UnidadeUpdate",
+    "EmbalagemItem",
+    "EmbalagemItemCreate",
+    "EmbalagemItemUpdate",
+    "EmbalagemItemWithUnidade"
 ]

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
 import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
 import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
+import { useUnidades } from '../hooks';
 
 interface ItemFormProps {
   item?: Item;
@@ -23,11 +24,13 @@ const TIPOS_ITEM: { value: TipoItem; label: string }[] = [
 export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFormProps) {
   const [gruposLeaves, setGruposLeaves] = useState<GrupoItem[]>([]);
   const [loadingGrupos, setLoadingGrupos] = useState(true);
+  const { unidades, loading: loadingUnidades } = useUnidades();
   
   const [formData, setFormData] = useState({
     descricao: item?.descricao || '',
     tipo: item?.tipo || ("Produto" as TipoItem),
     grupo_id: item?.grupo_id || null,
+    unidade_padrao_id: item?.unidade_padrao_id || null,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -139,6 +142,33 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
         {loadingGrupos && (
           <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
             Carregando grupos...
+          </span>
+        )}
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>
+          Unidade Padrão
+          <select
+            value={formData.unidade_padrao_id || ''}
+            onChange={(e) => setFormData({ 
+              ...formData, 
+              unidade_padrao_id: e.target.value ? Number(e.target.value) : null 
+            })}
+            style={styles.select}
+            disabled={loadingUnidades}
+          >
+            <option value="">Nenhuma unidade</option>
+            {unidades.map((unidade) => (
+              <option key={unidade.id} value={unidade.id}>
+                {unidade.sigla} - {unidade.descricao}
+              </option>
+            ))}
+          </select>
+        </label>
+        {loadingUnidades && (
+          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            Carregando unidades...
           </span>
         )}
       </div>

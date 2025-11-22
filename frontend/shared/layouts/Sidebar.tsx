@@ -34,6 +34,9 @@ export default function Sidebar() {
           items={[
             { href: '/estoque/itens', label: 'Itens' },
             { href: '/estoque/grupos', label: 'Grupos' },
+            { href: '/estoque/unidades', label: 'Unidades' },
+            { href: '/estoque/embalagens', label: 'Embalagens' },
+            { href: '/estoque/locais', label: 'Locais' },
           ]}
           className={`${router.pathname.startsWith('/estoque') ? 'active' : ''}`}
         />

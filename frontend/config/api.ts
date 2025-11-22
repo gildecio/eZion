@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
   // Estoque
   itens: '/api/v1/estoque/itens/',
   grupos: '/api/v1/estoque/grupos/',
+  unidades: '/api/v1/estoque/unidades/',
+  embalagens: '/api/v1/estoque/embalagens/',
   
   // Vendas
   clientes: '/api/v1/vendas/clientes/',
