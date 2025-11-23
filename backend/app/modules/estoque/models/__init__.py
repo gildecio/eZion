@@ -6,6 +6,8 @@ from .local import Local
 from .lote import Lote
 from .movimentacao import MovimentacaoEstoque, TipoMovimentacao
 from .saldo import SaldoEstoque
+from .documento import Documento
+from .documento_item import DocumentoItem
 
 __all__ = [
     "Item", "TipoItem", 
@@ -15,5 +17,7 @@ __all__ = [
     "Local",
     "Lote",
     "MovimentacaoEstoque", "TipoMovimentacao",
-    "SaldoEstoque"
+    "SaldoEstoque",
+    "Documento",
+    "DocumentoItem"
 ]

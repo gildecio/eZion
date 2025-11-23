@@ -6,6 +6,8 @@ from .local_repository import local_repository
 from .lote import lote_repository
 from .movimentacao import movimentacao_repository
 from .saldo import saldo_repository
+from .documento import documento_repository
+from .documento_item import documento_item_repository
 
 __all__ = [
     "item_repository", 
@@ -16,4 +18,6 @@ __all__ = [
     "lote_repository",
     "movimentacao_repository",
     "saldo_repository",
+    "documento_repository",
+    "documento_item_repository",
 ]

@@ -105,6 +105,7 @@ export function useMovimentacoes(initialFilters?: MovimentacaoFilters) {
     movimentacoes,
     loading,
     error,
+    fetchMovimentacoes,
     registrarEntrada,
     registrarSaida,
     registrarTransferencia,
