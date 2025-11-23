@@ -4,3 +4,4 @@ export * from './embalagem';
 export * from './lote';
 export * from './movimentacao';
 export * from './saldo';
+export * from './documento';
