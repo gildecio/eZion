@@ -6,16 +6,7 @@ from .local import Local
 from .lote import Lote
 from .movimentacao import MovimentacaoEstoque, TipoMovimentacao
 from .saldo import SaldoEstoque
-from .documento import (
-    Documento, TipoDocumento,
-    NotaFiscalCompra, NotaFiscalVenda,
-    NotaFiscalDevolucaoCliente, NotaFiscalDevolucaoFornecedor,
-    TransferenciaEntrada, TransferenciaSaida,
-    OrdemProducao, RequisicaoMaterial, NotaRemessa,
-    AjustePositivo, AjusteNegativo,
-    OrdemSeparacao, OrdemMontagem
-)
-from .documento_item import DocumentoItem
+from .ajuste_estoque import AjusteEstoque, AjusteEstoqueItem, TipoAjuste
 
 __all__ = [
     "Item", "TipoItem", 
@@ -26,12 +17,6 @@ __all__ = [
     "Lote",
     "MovimentacaoEstoque", "TipoMovimentacao",
     "SaldoEstoque",
-    "Documento", "TipoDocumento",
-    "NotaFiscalCompra", "NotaFiscalVenda",
-    "NotaFiscalDevolucaoCliente", "NotaFiscalDevolucaoFornecedor",
-    "TransferenciaEntrada", "TransferenciaSaida",
-    "OrdemProducao", "RequisicaoMaterial", "NotaRemessa",
-    "AjustePositivo", "AjusteNegativo",
-    "OrdemSeparacao", "OrdemMontagem",
-    "DocumentoItem"
+    "AjusteEstoque", "AjusteEstoqueItem", "TipoAjuste",
 ]
+

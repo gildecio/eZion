@@ -1,8 +1,7 @@
 import { apiClient } from '@/services/api-client';
-import { API_ENDPOINTS } from '@/config/api';
 import { Local, LocalCreate, LocalUpdate } from '../types/local';
 
-const BASE_URL = API_ENDPOINTS.locais;
+const BASE_URL = '/estoque/locais/';
 
 export const localService = {
   async getAll(apenasAtivos: boolean = false): Promise<Local[]> {

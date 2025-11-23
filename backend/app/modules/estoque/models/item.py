@@ -35,7 +35,6 @@ class Item(Base):
     local_padrao_entrada = relationship("Local", foreign_keys=[local_padrao_entrada_id])
     local_padrao_saida = relationship("Local", foreign_keys=[local_padrao_saida_id])
     embalagens = relationship("EmbalagemItem", back_populates="item", cascade="all, delete-orphan")
-    documento_itens = relationship("DocumentoItem", back_populates="item")
 
     def __repr__(self):
         return f"<Item(id={self.id}, codigo='{self.codigo}', descricao='{self.descricao}', tipo='{self.tipo}')>"

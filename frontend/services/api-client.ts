@@ -14,6 +14,7 @@ export interface ApiError {
 
 class ApiClient {
   private baseURL: string;
+  private apiPrefix: string = '/api/v1';
   private timeout: number;
 
   constructor() {
@@ -28,8 +29,13 @@ class ApiClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    // Adiciona o prefixo /api/v1 automaticamente se o endpoint não começar com http
+    const url = endpoint.startsWith('http') 
+      ? endpoint 
+      : `${this.baseURL}${this.apiPrefix}${endpoint}`;
+
     try {
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      const response = await fetch(url, {
         ...options,
         signal: controller.signal,
         headers: {

@@ -1,5 +1,4 @@
 import { apiClient } from '@/services/api-client';
-import { API_ENDPOINTS } from '@/config/api';
 import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
 
 interface GetAllFilters {
@@ -9,7 +8,7 @@ interface GetAllFilters {
 
 export class ItemService {
   async getAll(filters?: GetAllFilters): Promise<Item[]> {
-    let url = API_ENDPOINTS.itens;
+    let url = '/estoque/itens/';
     const params = new URLSearchParams();
     
     if (filters) {
@@ -31,22 +30,22 @@ export class ItemService {
   }
 
   async getById(id: number): Promise<Item> {
-    const response = await apiClient.get<Item>(`${API_ENDPOINTS.itens}${id}`);
+    const response = await apiClient.get<Item>(`/estoque/itens/${id}`);
     return response.data;
   }
 
   async create(data: CreateItemDTO): Promise<Item> {
-    const response = await apiClient.post<Item>(API_ENDPOINTS.itens, data);
+    const response = await apiClient.post<Item>('/estoque/itens/', data);
     return response.data;
   }
 
   async update(id: number, data: UpdateItemDTO): Promise<Item> {
-    const response = await apiClient.put<Item>(`${API_ENDPOINTS.itens}${id}`, data);
+    const response = await apiClient.put<Item>(`/estoque/itens/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`${API_ENDPOINTS.itens}${id}`);
+    await apiClient.delete(`/estoque/itens/${id}`);
   }
 }
 

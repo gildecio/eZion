@@ -1,30 +1,30 @@
 import { apiClient } from '@/services/api-client';
-import { API_ENDPOINTS } from '@/config/api';
+
 import type { Lote, CreateLoteDTO, UpdateLoteDTO } from '../types';
 
 export class LoteService {
   async getAll(): Promise<Lote[]> {
-    const response = await apiClient.get<Lote[]>(API_ENDPOINTS.lotes);
+    const response = await apiClient.get<Lote[]>('/estoque/lotes/');
     return response.data;
   }
 
   async getById(id: number): Promise<Lote> {
-    const response = await apiClient.get<Lote>(`${API_ENDPOINTS.lotes}${id}`);
+    const response = await apiClient.get<Lote>(`/estoque/lotes${id}`);
     return response.data;
   }
 
   async create(data: CreateLoteDTO): Promise<Lote> {
-    const response = await apiClient.post<Lote>(API_ENDPOINTS.lotes, data);
+    const response = await apiClient.post<Lote>('/estoque/lotes/', data);
     return response.data;
   }
 
   async update(id: number, data: UpdateLoteDTO): Promise<Lote> {
-    const response = await apiClient.put<Lote>(`${API_ENDPOINTS.lotes}${id}`, data);
+    const response = await apiClient.put<Lote>(`/estoque/lotes${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`${API_ENDPOINTS.lotes}${id}`);
+    await apiClient.delete(`/estoque/lotes${id}`);
   }
 }
 

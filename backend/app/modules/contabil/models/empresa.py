@@ -11,8 +11,5 @@ class Empresa(Base):
     cnpj = Column(String(14), unique=True, nullable=False, index=True)
     ativo = Column(Boolean, default=True, nullable=False, index=True)
 
-    # Relacionamentos
-    documentos = relationship("Documento", back_populates="empresa")
-
     def __repr__(self):
         return f"<Empresa(id={self.id}, razao_social='{self.razao_social}', cnpj='{self.cnpj}')>"

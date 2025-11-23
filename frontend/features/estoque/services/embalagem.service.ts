@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api-client';
-import { API_ENDPOINTS } from '@/config/api';
+
 import type { 
   EmbalagemItem, 
   EmbalagemItemWithUnidade,
@@ -10,28 +10,28 @@ import type {
 class EmbalagemService {
   async getByItem(itemId: number): Promise<EmbalagemItemWithUnidade[]> {
     const response = await apiClient.get<EmbalagemItemWithUnidade[]>(
-      `${API_ENDPOINTS.embalagens}item/${itemId}`
+      `/estoque/embalagensitem/${itemId}`
     );
     return response.data;
   }
 
   async getById(id: number): Promise<EmbalagemItem> {
-    const response = await apiClient.get<EmbalagemItem>(`${API_ENDPOINTS.embalagens}${id}`);
+    const response = await apiClient.get<EmbalagemItem>(`/estoque/embalagens${id}`);
     return response.data;
   }
 
   async create(data: CreateEmbalagemItemDTO): Promise<EmbalagemItem> {
-    const response = await apiClient.post<EmbalagemItem>(API_ENDPOINTS.embalagens, data);
+    const response = await apiClient.post<EmbalagemItem>('/estoque/embalagens/', data);
     return response.data;
   }
 
   async update(id: number, data: UpdateEmbalagemItemDTO): Promise<EmbalagemItem> {
-    const response = await apiClient.put<EmbalagemItem>(`${API_ENDPOINTS.embalagens}${id}`, data);
+    const response = await apiClient.put<EmbalagemItem>(`/estoque/embalagens${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`${API_ENDPOINTS.embalagens}${id}`);
+    await apiClient.delete(`/estoque/embalagens${id}`);
   }
 }
 

@@ -12,8 +12,5 @@ class Local(Base):
     descricao = Column(String(255))
     ativo = Column(Boolean, default=True, nullable=False)
 
-    # Relacionamentos
-    documento_itens = relationship("DocumentoItem", back_populates="local")
-
     def __repr__(self):
         return f"<Local(id={self.id}, codigo={self.codigo}, nome={self.nome})>"
