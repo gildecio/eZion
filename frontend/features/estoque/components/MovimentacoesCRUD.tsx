@@ -84,19 +84,19 @@ export default function MovimentacoesCRUD() {
         <h3>Filtros</h3>
         <div className="filtros-grid">
           <div className="form-group">
-            <label>Item</label>
+            <label>Item *</label>
             <select
               value={filters.item_id || ''}
               onChange={(e) => handleFilterChange('item_id', e.target.value ? Number(e.target.value) : undefined)}
             >
-              <option value="">Todos</option>
+              <option value="">Selecione um item</option>
               {itens.map(item => (
                 <option key={item.id} value={item.id}>{item.descricao}</option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label>Data Início</label>
+            <label>Data Início *</label>
             <input
               type="date"
               value={filters.data_inicio || ''}
@@ -104,7 +104,7 @@ export default function MovimentacoesCRUD() {
             />
           </div>
           <div className="form-group">
-            <label>Data Fim</label>
+            <label>Data Fim *</label>
             <input
               type="date"
               value={filters.data_fim || ''}
@@ -123,11 +123,21 @@ export default function MovimentacoesCRUD() {
               ))}
             </select>
           </div>
+          <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button onClick={handleConsultar} className="btn-consultar" disabled={loading}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              {loading ? 'Consultando...' : 'Consultar'}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="content">
-        {loading ? (
+        {!hasSearched ? (
+          <div className="empty">Selecione os filtros e clique em "Consultar" para visualizar as movimentações</div>
+        ) : loading ? (
           <div className="loading">Carregando...</div>
         ) : (
           <div className="table-wrapper">
@@ -251,6 +261,33 @@ export default function MovimentacoesCRUD() {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 1rem;
+        }
+
+        .btn-consultar {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.625rem 1.5rem;
+          background: #556b2f;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .btn-consultar:hover:not(:disabled) {
+          background: #6b8e23;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-consultar:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .form-container {

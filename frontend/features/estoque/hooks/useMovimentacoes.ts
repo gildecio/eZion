@@ -29,10 +29,6 @@ export function useMovimentacoes(initialFilters?: MovimentacaoFilters) {
     }
   }, []);
 
-  useEffect(() => {
-    fetchMovimentacoes(initialFilters);
-  }, [initialFilters, fetchMovimentacoes]);
-
   const registrarEntrada = useCallback(async (data: CreateMovimentacaoEntradaDTO) => {
     setLoading(true);
     setError(null);
