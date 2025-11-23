@@ -28,12 +28,23 @@ export default function LoginPage() {
   const loadEmpresas = async () => {
     try {
       const data = await empresaService.getAll();
+      console.log('Empresas carregadas:', data);
       setEmpresas(data);
       if (data.length > 0) {
         setEmpresaId(data[0].id);
       }
+      // Limpar erro se conseguiu carregar
+      setError('');
     } catch (err: any) {
-      setError('Erro ao carregar empresas');
+      console.error('Erro ao carregar empresas:', err);
+      const errorMsg = err.message || 'Erro de conexão com o servidor';
+      
+      // Verificar se é erro de rede
+      if (errorMsg.includes('NetworkError') || errorMsg.includes('fetch')) {
+        setError('Não foi possível conectar ao servidor. Verifique se o backend está rodando na porta 8000.');
+      } else {
+        setError('Erro ao carregar empresas: ' + errorMsg);
+      }
     }
   };
 
@@ -106,6 +117,16 @@ export default function LoginPage() {
                 <path d="M10 6V10M10 14H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
               <span>{error}</span>
+              {error.includes('servidor') && (
+                <button
+                  type="button"
+                  onClick={loadEmpresas}
+                  className="retry-btn"
+                  style={{ marginLeft: 'auto', padding: '0.25rem 0.75rem', background: '#556b2f', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.875rem' }}
+                >
+                  Tentar novamente
+                </button>
+              )}
             </div>
           )}
 
