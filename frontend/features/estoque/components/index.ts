@@ -4,4 +4,7 @@ export { default as ItensCRUD } from './ItensCRUD';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as UnidadesCRUD } from './UnidadesCRUD';
 export { default as EmbalagensCRUD } from './EmbalagensCRUD';
+export { GruposItemCRUD } from './GruposItemCRUD';
+export { GrupoItemForm } from './GrupoItemForm';
+export { GrupoItemTreeView } from './GrupoItemTreeView';
 export { default as LoteForm } from './LoteForm';

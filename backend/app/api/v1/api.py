@@ -1,8 +1,16 @@
 from fastapi import APIRouter
 from app.modules.contabil.endpoints import empresas
 from app.modules.estoque.endpoints import itens, grupos, unidades, embalagens, locais, lotes, movimentacoes, saldos, documentos, documento_itens
+from app.modules.auth import endpoints as auth
 
 api_router = APIRouter()
+
+# Auth routes
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["Autenticação"]
+)
 
 # Contábil routes
 api_router.include_router(

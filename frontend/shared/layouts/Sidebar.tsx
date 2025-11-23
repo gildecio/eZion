@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useAuth } from '@/contexts/AuthContext'
 import Dropdown from '../ui/Dropdown'
 
 const items = [{ 
@@ -15,6 +16,12 @@ const items = [{
 
 export default function Sidebar() {
   const router = useRouter()
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
 
   return (
     <header className="sidebar top-nav">
@@ -82,10 +89,15 @@ export default function Sidebar() {
 
       <div className="top-nav-actions">
         <div className="user">
-          <div className="avatar">EZ</div>
+          <div className="avatar">{user?.name?.substring(0, 2).toUpperCase() || 'EZ'}</div>
           <div className="user-info">
-            <div className="user-name">Gildecio</div>
+            <div className="user-name">{user?.name || 'Usuário'}</div>
           </div>
+          <button onClick={handleLogout} className="logout-btn" title="Sair">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </header>

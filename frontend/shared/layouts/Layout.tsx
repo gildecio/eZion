@@ -1,5 +1,6 @@
 import React, { PropsWithChildren } from 'react'
 import Sidebar from './Sidebar'
+import { Footer } from '@/shared/components/Footer'
 
 export default function Layout({ children }: PropsWithChildren<{}>) {
   return (
@@ -10,6 +11,7 @@ export default function Layout({ children }: PropsWithChildren<{}>) {
           {children}
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

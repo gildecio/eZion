@@ -1,0 +1,70 @@
+==============================================
+REGRAS E DIRETRIZES - BACKEND eZion
+==============================================
+
+IMPORTANTE: Sempre leia este arquivo antes de qualquer interação ou modificação no backend.
+
+==============================================
+SEPARAÇÃO DE RESPONSABILIDADES
+==============================================
+
+O desenvolvimento do backend e frontend são tratados separadamente.
+- Backend: API REST, lógica de negócio, acesso a dados
+- Frontend: Interface do usuário, consumo da API
+
+==============================================
+CONFIGURAÇÃO DO SERVIDOR
+==============================================
+
+REGRA #1: PORTA DO SERVIDOR
+- O backend SEMPRE deve rodar na porta 8001
+- Comando padrão: python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8001
+- Nunca usar a porta padrão 8000
+- Frontend espera backend em: http://localhost:8001
+
+==============================================
+ESTRUTURA DO PROJETO
+==============================================
+
+backend/
+├── main.py                 # Entrada da aplicação
+├── requirements.txt        # Dependências Python
+├── app/
+│   ├── core/              # Configurações centrais
+│   ├── db/                # Sessão e conexão com banco
+│   ├── modules/           # Módulos de negócio (contabil, estoque, vendas)
+│   ├── repositories/      # Camada de acesso a dados
+│   ├── services/          # Lógica de negócio
+│   └── api/v1/            # Rotas da API
+└── migrations/            # Scripts SQL de migração
+
+==============================================
+CONTROLE DE VERSÃO
+==============================================
+
+REGRA #2: COMMITS
+- NUNCA realizar commits automáticos
+- Sempre aguardar instrução explícita do usuário para commit
+- Usuário decide quando e como versionar o código
+
+==============================================
+PADRÃO DE ENDPOINTS
+==============================================
+
+REGRA #3: ESTRUTURA DE URLS DA API
+- Padrão obrigatório: /api/v1/(módulo)/(recurso)
+- Exemplos:
+  * /api/v1/contabil/empresas
+  * /api/v1/estoque/itens
+  * /api/v1/estoque/documentos
+  * /api/v1/vendas/clientes
+- Módulos disponíveis: contabil, estoque, vendas
+- Sempre usar plural para recursos (empresas, itens, locais)
+- Manter consistência com a estrutura app/modules/
+
+==============================================
+PRÓXIMAS REGRAS
+==============================================
+
+(Adicionar conforme necessário durante o desenvolvimento)
+

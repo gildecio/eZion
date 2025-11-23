@@ -4,6 +4,9 @@ export const API_CONFIG = {
 } as const;
 
 export const API_ENDPOINTS = {
+  // Auth
+  login: '/api/v1/auth/login',
+  
   // Contábil
   empresas: '/api/v1/contabil/empresas/',
   

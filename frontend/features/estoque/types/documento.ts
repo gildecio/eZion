@@ -21,19 +21,19 @@ export enum TipoDocumento {
 }
 
 export const TIPO_DOCUMENTO_LABELS: Record<string, string> = {
-  "Nota Fiscal de Compra": "Nota Fiscal de Compra",
-  "Nota Fiscal de Devolução de Cliente": "Nota Fiscal de Devolução de Cliente",
-  "Transferência entre Locais (Entrada)": "Transferência entre Locais (Entrada)",
-  "Ordem de Produção": "Ordem de Produção",
-  "Ajuste de Inventário Positivo": "Ajuste de Inventário Positivo",
-  "Nota Fiscal de Venda": "Nota Fiscal de Venda",
-  "Nota Fiscal de Devolução ao Fornecedor": "Nota Fiscal de Devolução ao Fornecedor",
-  "Transferência entre Locais (Saída)": "Transferência entre Locais (Saída)",
-  "Requisição de Material": "Requisição de Material",
-  "Nota de Remessa": "Nota de Remessa",
-  "Ajuste de Inventário Negativo": "Ajuste de Inventário Negativo",
-  "Ordem de Separação": "Ordem de Separação",
-  "Ordem de Montagem/Desmontagem": "Ordem de Montagem/Desmontagem"
+  "Nota Fiscal de Compra": "01 - Nota Fiscal de Compra",
+  "Nota Fiscal de Devolução de Cliente": "02 - Nota Fiscal de Devolução de Cliente",
+  "Transferência entre Locais (Entrada)": "03 - Transferência entre Locais (Entrada)",
+  "Ordem de Produção": "04 - Ordem de Produção",
+  "Ajuste de Inventário Positivo": "05 - Ajuste de Inventário Positivo",
+  "Nota Fiscal de Venda": "06 - Nota Fiscal de Venda",
+  "Nota Fiscal de Devolução ao Fornecedor": "07 - Nota Fiscal de Devolução ao Fornecedor",
+  "Transferência entre Locais (Saída)": "08 - Transferência entre Locais (Saída)",
+  "Requisição de Material": "09 - Requisição de Material",
+  "Nota de Remessa": "10 - Nota de Remessa",
+  "Ajuste de Inventário Negativo": "11 - Ajuste de Inventário Negativo",
+  "Ordem de Separação": "12 - Ordem de Separação",
+  "Ordem de Montagem/Desmontagem": "13 - Ordem de Montagem/Desmontagem"
 };
 
 // Alias para facilitar busca
