@@ -2,10 +2,12 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from decimal import Decimal
+from app.modules.estoque.models.documento import TipoDocumento
 
 
 class DocumentoBase(BaseModel):
     numero: str = Field(..., max_length=50)
+    tipo_documento: TipoDocumento
     data_registro: datetime
     data_entrada: Optional[datetime] = None
     valor: Decimal = Field(..., ge=0)
@@ -25,6 +27,7 @@ class DocumentoCreate(DocumentoBase):
 
 class DocumentoUpdate(BaseModel):
     numero: Optional[str] = Field(None, max_length=50)
+    tipo_documento: Optional[TipoDocumento] = None
     data_registro: Optional[datetime] = None
     data_entrada: Optional[datetime] = None
     valor: Optional[Decimal] = Field(None, ge=0)

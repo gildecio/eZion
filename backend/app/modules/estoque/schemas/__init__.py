@@ -20,7 +20,7 @@ from .movimentacao import (
     MovimentacaoDetalhada, TipoMovimentacao
 )
 from .saldo import Saldo, SaldoCreate, SaldoUpdate, SaldoDetalhado
-from .documento import Documento, DocumentoCreate, DocumentoUpdate
+from .documento import Documento, DocumentoCreate, DocumentoUpdate, TipoDocumento
 from .documento_item import DocumentoItem, DocumentoItemCreate, DocumentoItemUpdate
 
 __all__ = [
@@ -44,6 +44,6 @@ __all__ = [
     "Lote", "LoteCreate", "LoteUpdate",
     "Movimentacao", "MovimentacaoCreate", "MovimentacaoUpdate", "MovimentacaoDetalhada", "TipoMovimentacao",
     "Saldo", "SaldoCreate", "SaldoUpdate", "SaldoDetalhado",
-    "Documento", "DocumentoCreate", "DocumentoUpdate",
+    "Documento", "DocumentoCreate", "DocumentoUpdate", "TipoDocumento",
     "DocumentoItem", "DocumentoItemCreate", "DocumentoItemUpdate",
 ]
