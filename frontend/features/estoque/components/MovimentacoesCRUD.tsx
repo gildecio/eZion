@@ -8,22 +8,10 @@ import type {
 
 export default function MovimentacoesCRUD() {
   const [filters, setFilters] = useState<MovimentacaoFilters>({});
+  const [hasSearched, setHasSearched] = useState(false);
   
-  const { movimentacoes, loading, error } = useMovimentacoes(filters);
+  const { movimentacoes, loading, error, fetchMovimentacoes } = useMovimentacoes(filters);
   const { itens } = useItens();
-
-  const [formData, setFormData] = useState<any>({
-    item_id: '',
-    unidade_id: 1,
-    local_origem_id: '',
-    local_destino_id: '',
-    lote_id: '',
-    quantidade: '',
-    custo_unitario: '',
-    data_movimentacao: new Date().toISOString().split('T')[0],
-    observacoes: '',
-  });
-
 
   const handleFilterChange = (key: keyof MovimentacaoFilters, value: any) => {
     setFilters(prev => {
@@ -35,6 +23,15 @@ export default function MovimentacoesCRUD() {
       }
       return newFilters;
     });
+  };
+
+  const handleConsultar = () => {
+    if (!filters.item_id || !filters.data_inicio || !filters.data_fim) {
+      alert('Por favor, selecione o item e o período (data início e fim) para consultar.');
+      return;
+    }
+    setHasSearched(true);
+    fetchMovimentacoes(filters);
   };
 
   const formatDate = (dateString: string) => {
