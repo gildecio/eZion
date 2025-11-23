@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.modules.contabil.endpoints import empresas
 from app.modules.estoque.endpoints import itens, grupos, unidades, embalagens, locais, lotes, movimentacoes, saldos, ajuste_estoque
+from app.modules.configuracoes.endpoints import sequencias
 from app.modules.auth import endpoints as auth
 
 api_router = APIRouter()
@@ -17,6 +18,13 @@ api_router.include_router(
     empresas.router,
     prefix="/contabil/empresas",
     tags=["Contábil - Empresas"]
+)
+
+# Configurações routes
+api_router.include_router(
+    sequencias.router,
+    prefix="/configuracoes/sequencias",
+    tags=["Configurações - Sequências"]
 )
 
 # Estoque routes

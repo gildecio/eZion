@@ -2,6 +2,7 @@ export interface AjusteEstoqueItem {
   id: number;
   ajuste_id: number;
   item_id: number;
+  embalagem_id?: number;
   quantidade: number;
   valor_unitario: number;
   valor_total: number;
@@ -14,6 +15,7 @@ export interface AjusteEstoqueItem {
 
 export interface CreateAjusteEstoqueItemDTO {
   item_id: number;
+  embalagem_id?: number;
   quantidade: number;
   valor_unitario: number;
   valor_total: number;
@@ -25,28 +27,31 @@ export interface CreateAjusteEstoqueItemDTO {
 export interface AjusteEstoque {
   id: number;
   numero: string;
+  serie?: string;
   data_entrada: string;
   data_registro: string;
   tipo: 'E' | 'S';
   valor: number;
   empresa_id: number;
-  itens: AjusteEstoqueItem[];
+  itens?: AjusteEstoqueItem[];
   created_at?: string;
   updated_at?: string;
 }
 
 export interface CreateAjusteEstoqueDTO {
-  numero: string;
+  // numero será gerado automaticamente no backend
   data_entrada: string;
   data_registro: string;
   tipo: 'E' | 'S';
   valor: number;
   empresa_id: number;
+  serie?: string;
   itens: CreateAjusteEstoqueItemDTO[];
 }
 
 export interface UpdateAjusteEstoqueDTO {
   numero?: string;
+  serie?: string;
   data_entrada?: string;
   data_registro?: string;
   tipo?: 'E' | 'S';

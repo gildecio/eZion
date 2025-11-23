@@ -12,7 +12,8 @@ class AjusteEstoque(Base):
     __tablename__ = "ajuste_estoque"
 
     id = Column(Integer, primary_key=True, index=True)
-    numero = Column(String(50), nullable=False, unique=True, index=True)
+    numero = Column(String(50), nullable=False, index=True)
+    serie = Column(String(10), nullable=True)
     data_entrada = Column(Date, nullable=False)
     data_registro = Column(Date, nullable=False)
     tipo = Column(String(1), nullable=False)
@@ -31,6 +32,7 @@ class AjusteEstoqueItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     ajuste_id = Column(Integer, ForeignKey("ajuste_estoque.id", ondelete="CASCADE"), nullable=False)
     item_id = Column(Integer, ForeignKey("itens.id"), nullable=False)
+    embalagem_id = Column(Integer, ForeignKey("embalagens_item.id"), nullable=True)
     quantidade = Column(Numeric(15, 3), nullable=False)
     valor_unitario = Column(Numeric(15, 2), nullable=False)
     valor_total = Column(Numeric(15, 2), nullable=False)
@@ -44,5 +46,6 @@ class AjusteEstoqueItem(Base):
     # Relationships
     ajuste = relationship("AjusteEstoque", back_populates="itens")
     item = relationship("Item")
+    embalagem = relationship("EmbalagemItem")
     lote = relationship("Lote")
     local = relationship("Local")

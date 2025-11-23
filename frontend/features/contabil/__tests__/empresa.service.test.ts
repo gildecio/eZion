@@ -24,7 +24,7 @@ describe('EmpresaService', () => {
       const result = await empresaService.getAll();
 
       expect(result).toEqual(mockEmpresas);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/contabil/empresas');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/contabil/empresas/');
     });
 
     it('deve lançar erro em caso de falha', async () => {
@@ -48,7 +48,7 @@ describe('EmpresaService', () => {
       const result = await empresaService.getById(1);
 
       expect(result).toEqual(mockEmpresa);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/v1/contabil/empresas/1');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/contabil/empresas/1');
     });
   });
 
@@ -70,7 +70,7 @@ describe('EmpresaService', () => {
       const result = await empresaService.create(newEmpresa);
 
       expect(result).toEqual(createdEmpresa);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/contabil/empresas', newEmpresa);
+      expect(mockApiClient.post).toHaveBeenCalledWith('/contabil/empresas/', newEmpresa);
     });
 
     it('deve usar ativo=true como padrão se não informado', async () => {
@@ -90,7 +90,7 @@ describe('EmpresaService', () => {
 
       await empresaService.create(newEmpresa);
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/v1/contabil/empresas', newEmpresa);
+      expect(mockApiClient.post).toHaveBeenCalledWith('/contabil/empresas/', newEmpresa);
     });
   });
 
@@ -112,7 +112,7 @@ describe('EmpresaService', () => {
       const result = await empresaService.update(1, updateData);
 
       expect(result).toEqual(updatedEmpresa);
-      expect(mockApiClient.put).toHaveBeenCalledWith('/api/v1/contabil/empresas/1', updateData);
+      expect(mockApiClient.put).toHaveBeenCalledWith('/contabil/empresas/1', updateData);
     });
 
     it('deve permitir atualização parcial', async () => {
@@ -132,7 +132,7 @@ describe('EmpresaService', () => {
       const result = await empresaService.update(1, updateData);
 
       expect(result).toEqual(updatedEmpresa);
-      expect(mockApiClient.put).toHaveBeenCalledWith('/api/v1/contabil/empresas/1', updateData);
+      expect(mockApiClient.put).toHaveBeenCalledWith('/contabil/empresas/1', updateData);
     });
   });
 
@@ -142,7 +142,7 @@ describe('EmpresaService', () => {
 
       await empresaService.delete(1);
 
-      expect(mockApiClient.delete).toHaveBeenCalledWith('/api/v1/contabil/empresas/1');
+      expect(mockApiClient.delete).toHaveBeenCalledWith('/contabil/empresas/1');
     });
 
     it('deve lançar erro se exclusão falhar', async () => {

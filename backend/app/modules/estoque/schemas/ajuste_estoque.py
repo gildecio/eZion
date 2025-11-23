@@ -5,6 +5,7 @@ from decimal import Decimal
 
 class AjusteEstoqueItemBase(BaseModel):
     item_id: int
+    embalagem_id: Optional[int] = None
     quantidade: Decimal = Field(..., gt=0)
     valor_unitario: Decimal = Field(..., ge=0)
     valor_total: Decimal = Field(..., ge=0)
@@ -29,11 +30,11 @@ class AjusteEstoqueItemInDB(AjusteEstoqueItemBase):
         from_attributes = True
 
 class AjusteEstoqueBase(BaseModel):
-    numero: str = Field(..., max_length=50)
     data_entrada: date
     data_registro: date
     tipo: str = Field(..., pattern="^(E|S)$")
     valor: Decimal = Field(..., ge=0)
+    serie: Optional[str] = Field(None, max_length=10)
 
     @validator('tipo')
     def validate_tipo(cls, v):
@@ -44,9 +45,11 @@ class AjusteEstoqueBase(BaseModel):
 class AjusteEstoqueCreate(AjusteEstoqueBase):
     empresa_id: int
     itens: List[AjusteEstoqueItemCreate] = []
+    # numero não é enviado, será gerado automaticamente
 
 class AjusteEstoqueUpdate(BaseModel):
     numero: Optional[str] = Field(None, max_length=50)
+    serie: Optional[str] = Field(None, max_length=10)
     data_entrada: Optional[date] = None
     data_registro: Optional[date] = None
     tipo: Optional[str] = Field(None, pattern="^(E|S)$")
@@ -59,10 +62,15 @@ class AjusteEstoqueUpdate(BaseModel):
             raise ValueError('Tipo deve ser E (Entrada) ou S (Saída)')
         return v
 
-class AjusteEstoqueInDB(AjusteEstoqueBase):
+class AjusteEstoqueInDB(BaseModel):
+    model_config = {"from_attributes": True}
+    
     id: int
+    numero: str
+    serie: Optional[str] = None
+    data_entrada: date
+    data_registro: date
+    tipo: str
+    valor: Decimal
     empresa_id: int
     itens: List[AjusteEstoqueItemInDB] = []
-    
-    class Config:
-        from_attributes = True

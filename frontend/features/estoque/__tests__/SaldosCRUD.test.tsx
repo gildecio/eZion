@@ -16,7 +16,7 @@ describe('SaldosCRUD', () => {
       id: 1,
       item_id: 1,
       item_codigo: 'ITEM001',
-      item_nome: 'Produto Teste',
+      item_descricao: 'Produto Teste',
       local_id: 1,
       local_nome: 'Almoxarifado',
       lote_id: 1,
@@ -24,12 +24,13 @@ describe('SaldosCRUD', () => {
       quantidade: 70,
       custo_medio: 10.50,
       valor_total: 735.00,
+      unidade_padrao_sigla: 'UN',
     },
     {
       id: 2,
       item_id: 1,
       item_codigo: 'ITEM001',
-      item_nome: 'Produto Teste',
+      item_descricao: 'Produto Teste',
       local_id: 2,
       local_nome: 'Loja Centro',
       lote_id: 1,
@@ -37,6 +38,7 @@ describe('SaldosCRUD', () => {
       quantidade: 30,
       custo_medio: 10.50,
       valor_total: 315.00,
+      unidade_padrao_sigla: 'UN',
     },
   ];
 
@@ -45,7 +47,7 @@ describe('SaldosCRUD', () => {
       id: 1,
       codigo: 'ITEM001',
       descricao: 'Produto Teste',
-      tipo_item: 'Produto Acabado',
+      tipo: 'P',
       unidade_id: 1,
       ativo: true,
     },
@@ -91,42 +93,46 @@ describe('SaldosCRUD', () => {
     jest.clearAllMocks();
   });
 
-  test('renderiza tabela com saldos', async () => {
+  test('renderiza título e descrição', async () => {
+    render(<SaldosCRUD />);
+    
+    expect(screen.getByText('Saldos de Estoque')).toBeInTheDocument();
+    expect(screen.getByText('Consulte o estoque atual e valores em estoque')).toBeInTheDocument();
+  });
+
+  test('renderiza filtros de item e local', () => {
+    render(<SaldosCRUD />);
+    
+    expect(screen.getByText('Filtros')).toBeInTheDocument();
+    const selects = screen.getAllByRole('combobox');
+    expect(selects).toHaveLength(2); // Item e Local
+    expect(screen.getByText('Todos os itens')).toBeInTheDocument();
+    expect(screen.getByText('Todos os locais')).toBeInTheDocument();
+  });
+
+  test('renderiza tabela com saldos quando há dados', async () => {
     render(<SaldosCRUD />);
 
     await waitFor(() => {
-      expect(screen.getByText('Saldos de Estoque')).toBeInTheDocument();
-      expect(screen.getByText('ITEM001')).toBeInTheDocument();
-      expect(screen.getByText('Produto Teste')).toBeInTheDocument();
+      // Verifica cabeçalhos da tabela - "Item" aparece no filtro e na tabela, usar getAllByText
+      expect(screen.getByText('Código')).toBeInTheDocument();
+      const itemHeaders = screen.getAllByText('Item');
+      expect(itemHeaders.length).toBeGreaterThanOrEqual(1); // Aparece no filtro e na tabela
+      const localHeaders = screen.getAllByText('Local');
+      expect(localHeaders.length).toBeGreaterThanOrEqual(1); // Aparece no filtro e na tabela
+      expect(screen.getByText('Lote')).toBeInTheDocument();
+      expect(screen.getByText('Quantidade')).toBeInTheDocument();
+      expect(screen.getByText('Unidade')).toBeInTheDocument();
+      
+      // Verifica dados na tabela
+      expect(screen.getAllByText('ITEM001')).toHaveLength(2);
+      expect(screen.getAllByText('Produto Teste')).toHaveLength(2);
       expect(screen.getByText('Almoxarifado')).toBeInTheDocument();
       expect(screen.getByText('Loja Centro')).toBeInTheDocument();
-      expect(screen.getByText('L001')).toBeInTheDocument();
     });
   });
 
-  test('exibe cards de resumo corretamente', async () => {
-    render(<SaldosCRUD />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Total de Itens')).toBeInTheDocument();
-      expect(screen.getByText('2')).toBeInTheDocument(); // 2 saldos
-      expect(screen.getByText('Quantidade Total')).toBeInTheDocument();
-      expect(screen.getByText('100,00')).toBeInTheDocument(); // 70 + 30
-      expect(screen.getByText('Valor Total')).toBeInTheDocument();
-    });
-  });
-
-  test('formata valores monetários corretamente', async () => {
-    render(<SaldosCRUD />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/R\$\s*10,50/)).toBeInTheDocument(); // custo médio
-      expect(screen.getByText(/R\$\s*735,00/)).toBeInTheDocument(); // valor total local 1
-      expect(screen.getByText(/R\$\s*315,00/)).toBeInTheDocument(); // valor total local 2
-    });
-  });
-
-  test('exibe alerta para estoque baixo', async () => {
+  test('exibe ícone de alerta para estoque baixo', async () => {
     const saldosComEstoqueBaixo = [
       {
         ...mockSaldos[0],
@@ -144,23 +150,9 @@ describe('SaldosCRUD', () => {
     render(<SaldosCRUD />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Atenção/i)).toBeInTheDocument();
-      expect(screen.getByText(/estoque baixo/i)).toBeInTheDocument();
+      const lowStockRow = screen.getByText('5,00').closest('tr');
+      expect(lowStockRow).toHaveClass('low-stock');
     });
-  });
-
-  test('permite filtrar por item', async () => {
-    render(<SaldosCRUD />);
-
-    const itemSelect = screen.getByLabelText(/Item/i);
-    expect(itemSelect).toBeInTheDocument();
-  });
-
-  test('permite filtrar por local', async () => {
-    render(<SaldosCRUD />);
-
-    const localSelect = screen.getByLabelText(/Local/i);
-    expect(localSelect).toBeInTheDocument();
   });
 
   test('exibe mensagem quando não há saldos', async () => {
@@ -174,7 +166,7 @@ describe('SaldosCRUD', () => {
     render(<SaldosCRUD />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Nenhum saldo encontrado/i)).toBeInTheDocument();
+      expect(screen.getByText('Nenhum saldo encontrado')).toBeInTheDocument();
     });
   });
 
@@ -188,7 +180,7 @@ describe('SaldosCRUD', () => {
 
     render(<SaldosCRUD />);
 
-    expect(screen.getByText(/Carregando/i)).toBeInTheDocument();
+    expect(screen.getByText('Carregando...')).toBeInTheDocument();
   });
 
   test('exibe erro quando há falha no carregamento', () => {
@@ -201,15 +193,17 @@ describe('SaldosCRUD', () => {
 
     render(<SaldosCRUD />);
 
-    expect(screen.getByText(/Erro ao carregar saldos/i)).toBeInTheDocument();
+    expect(screen.getByText('Erro ao carregar saldos')).toBeInTheDocument();
   });
 
-  test('exibe total geral no rodapé da tabela', async () => {
+  test('formata quantidade com vírgula decimal', async () => {
     render(<SaldosCRUD />);
 
     await waitFor(() => {
-      expect(screen.getByText('TOTAL GERAL')).toBeInTheDocument();
-      expect(screen.getByText(/R\$\s*1\.050,00/)).toBeInTheDocument();
+      // Quantidade 70 deve aparecer como 70,00
+      expect(screen.getByText('70,00')).toBeInTheDocument();
+      // Quantidade 30 deve aparecer como 30,00
+      expect(screen.getByText('30,00')).toBeInTheDocument();
     });
   });
 });

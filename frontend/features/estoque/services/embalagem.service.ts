@@ -10,13 +10,13 @@ import type {
 class EmbalagemService {
   async getByItem(itemId: number): Promise<EmbalagemItemWithUnidade[]> {
     const response = await apiClient.get<EmbalagemItemWithUnidade[]>(
-      `/estoque/embalagensitem/${itemId}`
+      `/estoque/embalagens/item/${itemId}`
     );
     return response.data;
   }
 
   async getById(id: number): Promise<EmbalagemItem> {
-    const response = await apiClient.get<EmbalagemItem>(`/estoque/embalagens${id}`);
+    const response = await apiClient.get<EmbalagemItem>(`/estoque/embalagens/${id}`);
     return response.data;
   }
 
@@ -26,12 +26,12 @@ class EmbalagemService {
   }
 
   async update(id: number, data: UpdateEmbalagemItemDTO): Promise<EmbalagemItem> {
-    const response = await apiClient.put<EmbalagemItem>(`/estoque/embalagens${id}`, data);
+    const response = await apiClient.put<EmbalagemItem>(`/estoque/embalagens/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/estoque/embalagens${id}`);
+    await apiClient.delete(`/estoque/embalagens/${id}`);
   }
 }
 

@@ -1,8 +1,10 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 from app.repositories.base import CRUDBase
 from app.modules.estoque.models.ajuste_estoque import AjusteEstoque, AjusteEstoqueItem
 from app.modules.estoque.schemas.ajuste_estoque import AjusteEstoqueCreate, AjusteEstoqueUpdate
+from app.modules.configuracoes.services import sequencia_service
 
 
 class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, AjusteEstoqueUpdate]):
@@ -20,23 +22,40 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
         ).first()
     
     def create_with_itens(self, db: Session, obj_in: AjusteEstoqueCreate) -> AjusteEstoque:
-        """Cria um ajuste com seus itens"""
-        itens_data = obj_in.itens if obj_in.itens else []
-        obj_data = obj_in.model_dump(exclude={'itens'})
-        
-        db_obj = self.model(**obj_data)
-        db.add(db_obj)
-        db.flush()  # Get the ID
-        
-        # Add items
-        for item_data in itens_data:
-            item_dict = item_data.model_dump() if hasattr(item_data, 'model_dump') else item_data.dict()
-            item_obj = AjusteEstoqueItem(**item_dict, ajuste_id=db_obj.id)
-            db.add(item_obj)
-        
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        """Cria um ajuste com seus itens - gera número da sequência dentro da transação"""
+        try:
+            # Gerar número da sequência dentro da transação
+            resultado = sequencia_service.obter_proximo_numero(
+                db=db,
+                empresa_id=obj_in.empresa_id,
+                documento_tipo="ESTOQUE_AJUSTE",
+                serie=obj_in.serie
+            )
+            
+            # Preparar dados do ajuste
+            itens_data = obj_in.itens if obj_in.itens else []
+            obj_data = obj_in.model_dump(exclude={'itens'})
+            obj_data['numero'] = resultado['numero']
+            obj_data['serie'] = resultado.get('serie')
+            
+            # Criar ajuste
+            db_obj = self.model(**obj_data)
+            db.add(db_obj)
+            db.flush()  # Get the ID
+            
+            # Adicionar itens
+            for item_data in itens_data:
+                item_dict = item_data.model_dump() if hasattr(item_data, 'model_dump') else item_data.dict()
+                item_obj = AjusteEstoqueItem(**item_dict, ajuste_id=db_obj.id)
+                db.add(item_obj)
+            
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
+            
+        except Exception as e:
+            db.rollback()
+            raise
     
     def update_with_itens(self, db: Session, db_obj: AjusteEstoque, obj_in: AjusteEstoqueUpdate) -> AjusteEstoque:
         """Atualiza um ajuste e seus itens"""
