@@ -1,7 +1,8 @@
 import { apiClient } from '@/services/api-client';
+import { API_ENDPOINTS } from '@/config/api';
 import type { Documento, CreateDocumentoDTO, UpdateDocumentoDTO } from '../types/documento';
 
-const BASE_URL = '/estoque/documentos/';
+const BASE_URL = API_ENDPOINTS.documentos;
 
 export class DocumentoService {
   async getAll(params?: {

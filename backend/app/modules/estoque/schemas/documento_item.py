@@ -4,9 +4,9 @@ from decimal import Decimal
 
 
 class DocumentoItemBase(BaseModel):
-    quantidade: Decimal = Field(..., gt=0, decimal_places=4)
-    valor_unitario: Decimal = Field(..., ge=0, decimal_places=2)
-    valor_total: Decimal = Field(..., ge=0, decimal_places=2)
+    quantidade: Decimal = Field(..., gt=0)
+    valor_unitario: Decimal = Field(..., ge=0)
+    valor_total: Decimal = Field(..., ge=0)
     documento_id: int
     item_id: int
     local_id: int
@@ -31,9 +31,9 @@ class DocumentoItemCreate(DocumentoItemBase):
 
 
 class DocumentoItemUpdate(BaseModel):
-    quantidade: Optional[Decimal] = Field(None, gt=0, decimal_places=4)
-    valor_unitario: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    valor_total: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    quantidade: Optional[Decimal] = Field(None, gt=0)
+    valor_unitario: Optional[Decimal] = Field(None, ge=0)
+    valor_total: Optional[Decimal] = Field(None, ge=0)
     item_id: Optional[int] = None
     local_id: Optional[int] = None
 

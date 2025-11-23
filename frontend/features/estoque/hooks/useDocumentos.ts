@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { documentoService } from '../services/documentoService';
 import type { Documento, CreateDocumentoDTO, UpdateDocumentoDTO } from '../types/documento';
 
@@ -7,75 +7,71 @@ export function useDocumentos() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDocumentos = useCallback(async (params?: {
+  const loadDocumentos = async (params?: {
     empresa_id?: number;
     data_inicio?: string;
     data_fim?: string;
   }) => {
-    setLoading(true);
-    setError(null);
     try {
+      setLoading(true);
+      setError(null);
       const data = await documentoService.getAll(params);
       setDocumentos(data);
     } catch (err: any) {
-      setError(err.message || 'Erro ao carregar documentos');
+      setError(err?.message || 'Erro ao carregar documentos');
       console.error('Erro ao buscar documentos:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadDocumentos();
   }, []);
 
-  const createDocumento = useCallback(async (data: CreateDocumentoDTO) => {
-    setLoading(true);
-    setError(null);
+  const create = async (data: CreateDocumentoDTO): Promise<boolean> => {
     try {
-      const newDocumento = await documentoService.create(data);
-      setDocumentos(prev => [...prev, newDocumento]);
-      return newDocumento;
+      setError(null);
+      await documentoService.create(data);
+      await loadDocumentos();
+      return true;
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar documento');
-      throw err;
-    } finally {
-      setLoading(false);
+      setError(err?.message || 'Erro ao criar documento');
+      return false;
     }
-  }, []);
+  };
 
-  const updateDocumento = useCallback(async (id: number, data: UpdateDocumentoDTO) => {
-    setLoading(true);
-    setError(null);
+  const update = async (id: number, data: UpdateDocumentoDTO): Promise<boolean> => {
     try {
-      const updated = await documentoService.update(id, data);
-      setDocumentos(prev => prev.map(doc => doc.id === id ? updated : doc));
-      return updated;
+      setError(null);
+      await documentoService.update(id, data);
+      await loadDocumentos();
+      return true;
     } catch (err: any) {
-      setError(err.message || 'Erro ao atualizar documento');
-      throw err;
-    } finally {
-      setLoading(false);
+      setError(err?.message || 'Erro ao atualizar documento');
+      return false;
     }
-  }, []);
+  };
 
-  const deleteDocumento = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
+  const remove = async (id: number): Promise<boolean> => {
     try {
+      setError(null);
       await documentoService.delete(id);
-      setDocumentos(prev => prev.filter(doc => doc.id !== id));
+      await loadDocumentos();
+      return true;
     } catch (err: any) {
-      setError(err.message || 'Erro ao excluir documento');
-      throw err;
-    } finally {
-      setLoading(false);
+      setError(err?.message || 'Erro ao excluir documento');
+      return false;
     }
-  }, []);
+  };
 
   return {
     documentos,
     loading,
     error,
-    fetchDocumentos,
-    createDocumento,
-    updateDocumento,
-    deleteDocumento,
+    create,
+    update,
+    remove,
+    refresh: loadDocumentos,
   };
 }

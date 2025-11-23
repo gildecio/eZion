@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   empresas: '/api/v1/contabil/empresas/',
   
   // Estoque
+  documentos: '/api/v1/estoque/documentos/',
   itens: '/api/v1/estoque/itens/',
   grupos: '/api/v1/estoque/grupos/',
   unidades: '/api/v1/estoque/unidades/',
