@@ -10,7 +10,7 @@ class TipoSequenciaEnum(str, Enum):
 
 class SequenciaBase(BaseModel):
     documento_tipo: str = Field(..., max_length=50)
-    numero: int = Field(default=1, ge=1)
+    numero: int = Field(default=1, ge=0)
     serie: Optional[str] = Field(None, max_length=10)
     numero_maximo: int = Field(default=999999, ge=1)
     tipo: TipoSequenciaEnum = TipoSequenciaEnum.CONTINUO
@@ -29,7 +29,7 @@ class SequenciaCreate(SequenciaBase):
 
 class SequenciaUpdate(BaseModel):
     documento_tipo: Optional[str] = Field(None, max_length=50)
-    numero: Optional[int] = Field(None, ge=1)
+    numero: Optional[int] = Field(None, ge=0)
     serie: Optional[str] = Field(None, max_length=10)
     numero_maximo: Optional[int] = Field(None, ge=1)
     tipo: Optional[TipoSequenciaEnum] = None

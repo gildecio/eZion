@@ -9,8 +9,8 @@ class TipoMovimentacao(str, enum.Enum):
     Entrada = "Entrada"
     Saida = "Saida"
     Transferencia = "Transferencia"
-    Ajuste_Positivo = "Ajuste Positivo"
-    Ajuste_Negativo = "Ajuste Negativo"
+    Ajuste_Entrada = "Ajuste Entrada"
+    Ajuste_Saida = "Ajuste Saida"
     Inventario = "Inventario"
     Producao = "Producao"
     Devolucao = "Devolucao"
@@ -40,7 +40,8 @@ class MovimentacaoEstoque(Base):
     
     # Dados da movimentação
     data_movimentacao = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
-    documento = Column(String(50), nullable=True, index=True)  # Nota fiscal, número do pedido, etc.
+    numero = Column(String(50), nullable=True, index=True)  # Número do documento
+    serie = Column(String(10), nullable=True, index=True)  # Série do documento
     observacoes = Column(Text, nullable=True)
     
     # Custo unitário (para entradas)

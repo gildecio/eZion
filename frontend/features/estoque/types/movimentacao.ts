@@ -2,8 +2,8 @@ export enum TipoMovimentacao {
   ENTRADA = 'Entrada',
   SAIDA = 'Saida',
   TRANSFERENCIA = 'Transferencia',
-  AJUSTE_POSITIVO = 'Ajuste Positivo',
-  AJUSTE_NEGATIVO = 'Ajuste Negativo',
+  AJUSTE_ENTRADA = 'Ajuste Entrada',
+  AJUSTE_SAIDA = 'Ajuste Saida',
   INVENTARIO = 'Inventario',
   PRODUCAO = 'Producao',
   DEVOLUCAO = 'Devolucao',
@@ -25,7 +25,8 @@ export interface MovimentacaoEstoque {
   local_destino_id?: number;
   local_destino_nome?: string;
   data_movimentacao: string;
-  documento?: string;
+  numero?: string;
+  serie?: string;
   observacoes?: string;
   custo_unitario?: number;
   saldo_anterior?: number;
@@ -43,7 +44,8 @@ export interface CreateMovimentacaoEntradaDTO {
   quantidade: number;
   custo_unitario: number;
   data_movimentacao?: string;
-  documento?: string;
+  numero?: string;
+  serie?: string;
   observacoes?: string;
   usuario?: string;
 }
@@ -56,7 +58,8 @@ export interface CreateMovimentacaoSaidaDTO {
   quantidade: number;
   custo_unitario?: number;
   data_movimentacao?: string;
-  documento?: string;
+  numero?: string;
+  serie?: string;
   observacoes?: string;
   usuario?: string;
 }
@@ -70,13 +73,14 @@ export interface CreateMovimentacaoTransferenciaDTO {
   quantidade: number;
   custo_unitario?: number;
   data_movimentacao?: string;
-  documento?: string;
+  numero?: string;
+  serie?: string;
   observacoes?: string;
   usuario?: string;
 }
 
 export interface CreateMovimentacaoAjusteDTO {
-  tipo: 'Ajuste Positivo' | 'Ajuste Negativo';
+  tipo: 'Ajuste Entrada' | 'Ajuste Saida';
   item_id: number;
   unidade_id: number;
   local_destino_id?: number;
@@ -85,7 +89,8 @@ export interface CreateMovimentacaoAjusteDTO {
   quantidade: number;
   custo_unitario?: number;
   data_movimentacao?: string;
-  documento?: string;
+  numero?: string;
+  serie?: string;
   observacoes?: string;
   usuario?: string;
 }

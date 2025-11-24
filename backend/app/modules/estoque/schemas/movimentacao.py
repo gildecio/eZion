@@ -9,8 +9,8 @@ class TipoMovimentacao(str, Enum):
     Entrada = "Entrada"
     Saida = "Saida"
     Transferencia = "Transferencia"
-    Ajuste_Positivo = "Ajuste Positivo"
-    Ajuste_Negativo = "Ajuste Negativo"
+    Ajuste_Entrada = "Ajuste Entrada"
+    Ajuste_Saida = "Ajuste Saida"
     Inventario = "Inventario"
     Producao = "Producao"
     Devolucao = "Devolucao"
@@ -25,7 +25,8 @@ class MovimentacaoBase(BaseModel):
     lote_id: Optional[int] = Field(None, description="ID do lote (opcional)")
     local_origem_id: Optional[int] = Field(None, description="ID do local de origem")
     local_destino_id: Optional[int] = Field(None, description="ID do local de destino")
-    documento: Optional[str] = Field(None, max_length=50, description="Número do documento")
+    numero: Optional[str] = Field(None, max_length=50, description="Número do documento")
+    serie: Optional[str] = Field(None, max_length=10, description="Série do documento")
     observacoes: Optional[str] = Field(None, description="Observações")
     custo_unitario: Optional[Decimal] = Field(None, description="Custo unitário (para entradas)")
     usuario: Optional[str] = Field(None, max_length=100, description="Usuário responsável")
@@ -37,7 +38,8 @@ class MovimentacaoCreate(MovimentacaoBase):
 
 class MovimentacaoUpdate(BaseModel):
     observacoes: Optional[str] = None
-    documento: Optional[str] = None
+    numero: Optional[str] = None
+    serie: Optional[str] = None
 
 
 class Movimentacao(MovimentacaoBase):

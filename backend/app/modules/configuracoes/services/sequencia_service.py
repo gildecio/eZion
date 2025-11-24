@@ -62,10 +62,11 @@ class SequenciaService:
                 sequencia.numero = 1
                 sequencia.serie = ano_atual
                 numero_atual = 1
+                sequencia.numero = 2  # Próximo será 2
             else:
                 # Mesmo ano: incrementar normalmente
-                numero_atual = sequencia.numero
                 sequencia.numero += 1
+                numero_atual = sequencia.numero
                 
                 # Validar se não ultrapassou o limite no mesmo ano
                 if sequencia.numero > sequencia.numero_maximo:
@@ -84,6 +85,7 @@ class SequenciaService:
                     sequencia.serie = str(serie_int + 1)
                     sequencia.numero = 1
                     numero_atual = 1
+                    sequencia.numero = 2  # Próximo será 2
                 except ValueError:
                     # Série não é numérica, não pode incrementar
                     raise HTTPException(
@@ -92,8 +94,8 @@ class SequenciaService:
                     )
             else:
                 # Incrementar normalmente
-                numero_atual = sequencia.numero
                 sequencia.numero += 1
+                numero_atual = sequencia.numero
         
         else:
             # Tipo desconhecido (não deveria acontecer)

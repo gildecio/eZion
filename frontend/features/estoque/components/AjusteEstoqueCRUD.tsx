@@ -4,6 +4,7 @@ import { ItemService } from '../services/item.service';
 import { LoteService } from '../services/lote.service';
 import { localService } from '../services/local-service';
 import { embalagemService } from '../services/embalagem.service';
+import { sequenciaService } from '@/features/configuracoes/services/sequencia.service';
 import {
   AjusteEstoque,
   CreateAjusteEstoqueDTO,
@@ -170,6 +171,26 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
   };
 
   const openForm = async (ajuste?: AjusteEstoque, viewMode = false) => {
+    // Se não está editando, verifica se existe sequência configurada
+    if (!ajuste) {
+      try {
+        const sequencias = await sequenciaService.getAll({ empresa_id: empresaId });
+        
+        const temSequenciaAjuste = sequencias.some(
+          (seq) => seq.documento_tipo === 'ESTOQUE_AJUSTE' && seq.empresa_id === empresaId
+        );
+        
+        if (!temSequenciaAjuste) {
+          alert('⚠️ Sequência não configurada!\n\nConfigure uma sequência para "ESTOQUE_AJUSTE" em:\nConfigurações > Sequências\n\nA sequência é necessária para gerar a numeração automática dos ajustes.');
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao verificar sequência:', error);
+        alert('Erro ao verificar sequência. Verifique sua conexão e tente novamente.');
+        return;
+      }
+    }
+    
     if (ajuste) {
       setEditingId(ajuste.id);
       setDataEntrada(ajuste.data_entrada);
@@ -408,7 +429,18 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
       resetForm();
     } catch (error: any) {
       console.error('Erro ao salvar ajuste:', error);
-      alert(error.response?.data?.detail || 'Erro ao salvar ajuste');
+      
+      let errorMessage = 'Erro ao salvar ajuste';
+      
+      if (error.response?.status === 404) {
+        errorMessage = 'Sequência não configurada! Configure uma sequência para "ESTOQUE_AJUSTE" em Configurações > Sequências';
+      } else if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -479,7 +511,6 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                   <th>Número</th>
                   <th>Série</th>
                   <th>Data Entrada</th>
-                  <th>Data Registro</th>
                   <th>Tipo</th>
                   <th>Valor</th>
                   <th>Itens</th>
@@ -517,9 +548,6 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                       </td>
                       <td onClick={() => toggleExpandRow(ajuste.id)}>
                         {ajuste.data_entrada ? new Date(ajuste.data_entrada).toLocaleDateString('pt-BR') : '-'}
-                      </td>
-                      <td onClick={() => toggleExpandRow(ajuste.id)}>
-                        {new Date(ajuste.data_registro).toLocaleDateString('pt-BR')}
                       </td>
                       <td onClick={() => toggleExpandRow(ajuste.id)}>
                         <span className={ajuste.tipo === 'E' ? 'badge badge-success' : 'badge badge-danger'}>

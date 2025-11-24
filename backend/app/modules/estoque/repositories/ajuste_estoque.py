@@ -5,6 +5,8 @@ from app.repositories.base import CRUDBase
 from app.modules.estoque.models.ajuste_estoque import AjusteEstoque, AjusteEstoqueItem
 from app.modules.estoque.schemas.ajuste_estoque import AjusteEstoqueCreate, AjusteEstoqueUpdate
 from app.modules.configuracoes.services import sequencia_service
+from app.modules.estoque.schemas.movimentacao import MovimentacaoCreate, TipoMovimentacao
+from app.modules.estoque.services.estoque_service import EstoqueService
 
 
 class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, AjusteEstoqueUpdate]):
@@ -51,11 +53,51 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
             
             db.commit()
             db.refresh(db_obj)
+            
+            # Processar movimentações e atualizar saldos para cada item
+            for item in db_obj.itens:
+                # Determinar tipo de movimentação
+                tipo_mov = (TipoMovimentacao.Ajuste_Entrada 
+                           if db_obj.tipo == 'E' 
+                           else TipoMovimentacao.Ajuste_Saida)
+                
+                # Buscar fator de conversão da embalagem se houver
+                quantidade_convertida = item.quantidade
+                if item.embalagem_id:
+                    from app.modules.estoque.models.embalagem_item import EmbalagemItem
+                    embalagem = db.query(EmbalagemItem).filter(EmbalagemItem.id == item.embalagem_id).first()
+                    if embalagem:
+                        quantidade_convertida = item.quantidade * embalagem.fator_conversao
+                
+                # Criar movimentação
+                movimentacao_data = MovimentacaoCreate(
+                    tipo=tipo_mov,
+                    item_id=item.item_id,
+                    quantidade=quantidade_convertida,
+                    unidade_id=self._get_unidade_from_item(db, item.item_id),
+                    lote_id=item.lote_id,
+                    local_destino_id=item.local_id if db_obj.tipo == 'E' else None,
+                    local_origem_id=item.local_id if db_obj.tipo == 'S' else None,
+                    numero=db_obj.numero,
+                    serie=db_obj.serie,
+                    custo_unitario=item.valor_unitario,
+                    observacoes=item.observacao
+                )
+                
+                # Processar através do EstoqueService
+                EstoqueService.processar_ajuste(db, movimentacao_data)
+            
             return db_obj
             
         except Exception as e:
             db.rollback()
             raise
+    
+    def _get_unidade_from_item(self, db: Session, item_id: int) -> int:
+        """Obtém a unidade padrão do item"""
+        from app.modules.estoque.models.item import Item
+        item = db.query(Item).filter(Item.id == item_id).first()
+        return item.unidade_padrao_id if item else None
     
     def update_with_itens(self, db: Session, db_obj: AjusteEstoque, obj_in: AjusteEstoqueUpdate) -> AjusteEstoque:
         """Atualiza um ajuste e seus itens"""

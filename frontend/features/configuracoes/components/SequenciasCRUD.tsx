@@ -210,9 +210,10 @@ const SequenciasCRUD: React.FC<SequenciasCRUDProps> = ({ empresaId }) => {
                     type="number"
                     value={numero}
                     onChange={(e) => setNumero(Number(e.target.value))}
-                    min={1}
+                    min={0}
                     required
                   />
+                  <small className="help-text">Use 0 para iniciar do número 1</small>
                 </div>
 
                 <div className="form-group">

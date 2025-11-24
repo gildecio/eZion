@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api-client';
 import type { SaldoEstoque, SaldoFilters } from '../types/saldo';
 
-const BASE_PATH = '/api/v1/estoque/saldos';
+const BASE_PATH = '/estoque/saldos';
 
 export class SaldoService {
   async getAll(filters?: SaldoFilters): Promise<SaldoEstoque[]> {
