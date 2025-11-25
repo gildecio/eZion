@@ -1,12 +1,4 @@
-export enum TipoItem {
-  PRODUTO = "Produto",
-  PRODUTO_EM_CRIACAO = "Produto em Criação",
-  INSUMO = "Insumo",
-  IMOBILIZADO = "Imobilizado",
-  SERVICO = "Serviço",
-  EMBALAGEM = "Embalagem",
-  OUTROS = "Outros"
-}
+// Nota: TipoItem definido em item.ts. Removido aqui para evitar duplicidade de export.
 
 export interface GrupoItem {
   id: number;

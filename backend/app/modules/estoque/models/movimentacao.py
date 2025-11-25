@@ -6,14 +6,14 @@ import enum
 
 
 class TipoMovimentacao(str, enum.Enum):
-    Entrada = "Entrada"
-    Saida = "Saida"
-    Transferencia = "Transferencia"
-    Ajuste_Entrada = "Ajuste Entrada"
-    Ajuste_Saida = "Ajuste Saida"
-    Inventario = "Inventario"
-    Producao = "Producao"
-    Devolucao = "Devolucao"
+    ENTRADA = "ENTRADA"
+    SAIDA = "SAIDA"
+    TRANSFERENCIA = "TRANSFERENCIA"
+    AJUSTE_ENTRADA = "AJUSTE_ENTRADA"
+    AJUSTE_SAIDA = "AJUSTE_SAIDA"
+    INVENTARIO = "INVENTARIO"
+    PRODUCAO = "PRODUCAO"
+    DEVOLUCAO = "DEVOLUCAO"
 
 
 class MovimentacaoEstoque(Base):
@@ -32,11 +32,8 @@ class MovimentacaoEstoque(Base):
     # Lote (opcional)
     lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=True, index=True)
     
-    # Local de origem (para transferências e saídas)
-    local_origem_id = Column(Integer, ForeignKey("locais.id"), nullable=True, index=True)
-    
-    # Local de destino (para entradas e transferências)
-    local_destino_id = Column(Integer, ForeignKey("locais.id"), nullable=True, index=True)
+    # Local da movimentação
+    local_id = Column(Integer, ForeignKey("locais.id"), nullable=True, index=True)
     
     # Dados da movimentação
     data_movimentacao = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
@@ -58,8 +55,7 @@ class MovimentacaoEstoque(Base):
     item = relationship("Item")
     unidade = relationship("Unidade")
     lote = relationship("Lote")
-    local_origem = relationship("Local", foreign_keys=[local_origem_id])
-    local_destino = relationship("Local", foreign_keys=[local_destino_id])
+    local = relationship("Local", foreign_keys=[local_id])
 
     def __repr__(self):
         return f"<MovimentacaoEstoque(id={self.id}, tipo='{self.tipo}', item_id={self.item_id}, qtd={self.quantidade})>"

@@ -18,7 +18,7 @@ export class MovimentacaoService {
     if (filters?.local_id) params.append('local_id', filters.local_id.toString());
     if (filters?.data_inicio) params.append('data_inicio', filters.data_inicio);
     if (filters?.data_fim) params.append('data_fim', filters.data_fim);
-    if (filters?.tipo_movimentacao) params.append('tipo_movimentacao', filters.tipo_movimentacao);
+    if (filters?.tipo_movimentacao) params.append('tipo', filters.tipo_movimentacao);
 
     const queryString = params.toString();
     const url = queryString ? `${BASE_PATH}?${queryString}` : BASE_PATH;
@@ -34,7 +34,7 @@ export class MovimentacaoService {
 
   async registrarEntrada(data: CreateMovimentacaoEntradaDTO): Promise<MovimentacaoEstoque> {
     const payload = {
-      tipo: 'Entrada',
+      tipo: 'ENTRADA',
       ...data,
     };
     const response = await apiClient.post<MovimentacaoEstoque>(BASE_PATH, payload);
@@ -43,7 +43,7 @@ export class MovimentacaoService {
 
   async registrarSaida(data: CreateMovimentacaoSaidaDTO): Promise<MovimentacaoEstoque> {
     const payload = {
-      tipo: 'Saida',
+      tipo: 'SAIDA',
       ...data,
     };
     const response = await apiClient.post<MovimentacaoEstoque>(BASE_PATH, payload);
@@ -52,7 +52,7 @@ export class MovimentacaoService {
 
   async registrarTransferencia(data: CreateMovimentacaoTransferenciaDTO): Promise<MovimentacaoEstoque> {
     const payload = {
-      tipo: 'Transferencia',
+      tipo: 'TRANSFERENCIA',
       ...data,
     };
     const response = await apiClient.post<MovimentacaoEstoque>(BASE_PATH, payload);

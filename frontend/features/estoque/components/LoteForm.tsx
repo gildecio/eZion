@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Lote, CreateLoteDTO, UpdateLoteDTO } from '../types';
+import type { Lote, CreateLoteDTO, UpdateLoteDTO } from '../types/lote';
 
 interface LoteFormProps {
   lote?: Lote;
@@ -10,8 +10,8 @@ interface LoteFormProps {
 
 export default function LoteForm({ lote, onSubmit, onCancel, isLoading }: LoteFormProps) {
   const [formData, setFormData] = useState({
-    lote: lote?.lote || '',
-    validade: lote?.validade || '',
+    codigo: lote?.codigo || '',
+    data_validade: lote?.data_validade || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -19,12 +19,12 @@ export default function LoteForm({ lote, onSubmit, onCancel, isLoading }: LoteFo
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.lote.trim()) {
-      newErrors.lote = 'Lote é obrigatório';
+    if (!formData.codigo.trim()) {
+      newErrors.codigo = 'Código é obrigatório';
     }
 
-    if (!formData.validade.trim()) {
-      newErrors.validade = 'Validade é obrigatória';
+    if (!formData.data_validade.trim()) {
+      newErrors.data_validade = 'Validade é obrigatória';
     }
 
     setErrors(newErrors);
@@ -47,20 +47,20 @@ export default function LoteForm({ lote, onSubmit, onCancel, isLoading }: LoteFo
     <form onSubmit={handleSubmit} style={styles.form}>
       <div style={styles.formGroup}>
         <label style={styles.label}>
-          Lote *
+          Código *
           <input
             type="text"
-            value={formData.lote}
-            onChange={(e) => setFormData({ ...formData, lote: e.target.value })}
+            value={formData.codigo}
+            onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
             style={{
               ...styles.input,
-              ...(errors.lote ? styles.inputError : {})
+              ...(errors.codigo ? styles.inputError : {})
             }}
-            placeholder="Digite o número do lote"
+            placeholder="Digite o código do lote"
             maxLength={50}
           />
         </label>
-        {errors.lote && <span style={styles.errorText}>{errors.lote}</span>}
+        {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
       </div>
 
       <div style={styles.formGroup}>
@@ -68,15 +68,15 @@ export default function LoteForm({ lote, onSubmit, onCancel, isLoading }: LoteFo
           Validade *
           <input
             type="date"
-            value={formData.validade}
-            onChange={(e) => setFormData({ ...formData, validade: e.target.value })}
+            value={formData.data_validade}
+            onChange={(e) => setFormData({ ...formData, data_validade: e.target.value })}
             style={{
               ...styles.input,
-              ...(errors.validade ? styles.inputError : {})
+              ...(errors.data_validade ? styles.inputError : {})
             }}
           />
         </label>
-        {errors.validade && <span style={styles.errorText}>{errors.validade}</span>}
+        {errors.data_validade && <span style={styles.errorText}>{errors.data_validade}</span>}
       </div>
 
       <div style={styles.buttonGroup}>

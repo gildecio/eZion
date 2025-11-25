@@ -1,12 +1,12 @@
 export enum TipoMovimentacao {
-  ENTRADA = 'Entrada',
-  SAIDA = 'Saida',
-  TRANSFERENCIA = 'Transferencia',
-  AJUSTE_ENTRADA = 'Ajuste Entrada',
-  AJUSTE_SAIDA = 'Ajuste Saida',
-  INVENTARIO = 'Inventario',
-  PRODUCAO = 'Producao',
-  DEVOLUCAO = 'Devolucao',
+  ENTRADA = 'ENTRADA',
+  SAIDA = 'SAIDA',
+  TRANSFERENCIA = 'TRANSFERENCIA',
+  AJUSTE_ENTRADA = 'AJUSTE_ENTRADA',
+  AJUSTE_SAIDA = 'AJUSTE_SAIDA',
+  INVENTARIO = 'INVENTARIO',
+  PRODUCAO = 'PRODUCAO',
+  DEVOLUCAO = 'DEVOLUCAO',
 }
 
 export interface MovimentacaoEstoque {
@@ -20,10 +20,8 @@ export interface MovimentacaoEstoque {
   unidade_sigla?: string;
   lote_id?: number;
   lote_codigo?: string;
-  local_origem_id?: number;
-  local_origem_nome?: string;
-  local_destino_id?: number;
-  local_destino_nome?: string;
+  local_id?: number;
+  local_nome?: string;
   data_movimentacao: string;
   numero?: string;
   serie?: string;
@@ -39,7 +37,7 @@ export interface MovimentacaoEstoque {
 export interface CreateMovimentacaoEntradaDTO {
   item_id: number;
   unidade_id: number;
-  local_destino_id: number;
+  local_id: number;
   lote_id?: number;
   quantidade: number;
   custo_unitario: number;
@@ -53,7 +51,7 @@ export interface CreateMovimentacaoEntradaDTO {
 export interface CreateMovimentacaoSaidaDTO {
   item_id: number;
   unidade_id: number;
-  local_origem_id: number;
+  local_id: number;
   lote_id?: number;
   quantidade: number;
   custo_unitario?: number;
@@ -64,11 +62,11 @@ export interface CreateMovimentacaoSaidaDTO {
   usuario?: string;
 }
 
+// Transferência removida do backend (mantido para compatibilidade caso necessário)
 export interface CreateMovimentacaoTransferenciaDTO {
   item_id: number;
   unidade_id: number;
-  local_origem_id: number;
-  local_destino_id: number;
+  local_id: number; // Representa o local da movimentação
   lote_id?: number;
   quantidade: number;
   custo_unitario?: number;
@@ -80,11 +78,10 @@ export interface CreateMovimentacaoTransferenciaDTO {
 }
 
 export interface CreateMovimentacaoAjusteDTO {
-  tipo: 'Ajuste Entrada' | 'Ajuste Saida';
+  tipo: 'AJUSTE_ENTRADA' | 'AJUSTE_SAIDA';
   item_id: number;
   unidade_id: number;
-  local_destino_id?: number;
-  local_origem_id?: number;
+  local_id: number;
   lote_id?: number;
   quantidade: number;
   custo_unitario?: number;

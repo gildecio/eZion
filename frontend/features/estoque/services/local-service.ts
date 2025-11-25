@@ -5,8 +5,8 @@ const BASE_URL = '/estoque/locais/';
 
 export const localService = {
   async getAll(apenasAtivos: boolean = false): Promise<Local[]> {
-    const params = apenasAtivos ? { apenas_ativos: true } : {};
-    const response = await apiClient.get<Local[]>(BASE_URL, { params });
+    const url = apenasAtivos ? `${BASE_URL}?apenas_ativos=true` : BASE_URL;
+    const response = await apiClient.get<Local[]>(url);
     return response.data;
   },
 

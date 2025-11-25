@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMovimentacoes } from '../hooks/useMovimentacoes';
 import { useItens } from '../hooks/useItens';
+import { useLocais } from '../hooks/useLocais';
 import { TipoMovimentacao } from '../types/movimentacao';
 import type {
   MovimentacaoFilters,
@@ -9,9 +10,9 @@ import type {
 export default function MovimentacoesCRUD() {
   const [filters, setFilters] = useState<MovimentacaoFilters>({});
   const [hasSearched, setHasSearched] = useState(false);
-  
   const { movimentacoes, loading, error, fetchMovimentacoes } = useMovimentacoes(filters);
   const { itens } = useItens();
+  const { locais } = useLocais();
 
   const handleFilterChange = (key: keyof MovimentacaoFilters, value: any) => {
     setFilters(prev => {
@@ -26,8 +27,8 @@ export default function MovimentacoesCRUD() {
   };
 
   const handleConsultar = () => {
-    if (!filters.item_id || !filters.data_inicio || !filters.data_fim) {
-      alert('Por favor, selecione o item e o período (data início e fim) para consultar.');
+    if (!filters.item_id) {
+      alert('Por favor, selecione um item para consultar as movimentações.');
       return;
     }
     setHasSearched(true);
@@ -40,23 +41,26 @@ export default function MovimentacoesCRUD() {
 
   const getTipoClass = (tipo: string) => {
     switch(tipo) {
-      case 'Entrada': 
-      case TipoMovimentacao.ENTRADA: 
+      case TipoMovimentacao.ENTRADA:
         return 'badge-entrada';
-      case 'Saida': 
-      case TipoMovimentacao.SAIDA: 
+      case TipoMovimentacao.SAIDA:
         return 'badge-saida';
-      case 'Transferencia': 
-      case TipoMovimentacao.TRANSFERENCIA: 
+      case TipoMovimentacao.TRANSFERENCIA:
         return 'badge-transferencia';
-      case 'Ajuste Positivo':
-      case 'Ajuste Negativo':
-      case TipoMovimentacao.AJUSTE_POSITIVO:
-      case TipoMovimentacao.AJUSTE_NEGATIVO:
+      case TipoMovimentacao.AJUSTE_ENTRADA:
+      case TipoMovimentacao.AJUSTE_SAIDA:
         return 'badge-ajuste';
-      default: 
+      default:
         return 'badge-ajuste';
     }
+  };
+
+  const getItemSelecionado = () => {
+    if (filters.item_id) {
+      const item = itens.find(i => i.id === filters.item_id);
+      return item ? `${item.codigo} - ${item.descricao}` : '';
+    }
+    return '';
   };
 
   return (
@@ -64,7 +68,7 @@ export default function MovimentacoesCRUD() {
       <div className="header">
         <div>
           <h1>Movimentações de Estoque</h1>
-          <p>Consulte o histórico de movimentações de estoque</p>
+          <p>{getItemSelecionado() || 'Selecione um item para consultar as movimentações'}</p>
         </div>
       </div>
 
@@ -88,12 +92,12 @@ export default function MovimentacoesCRUD() {
             >
               <option value="">Selecione um item</option>
               {itens.map(item => (
-                <option key={item.id} value={item.id}>{item.descricao}</option>
+                <option key={item.id} value={item.id}>{item.codigo} - {item.descricao}</option>
               ))}
             </select>
           </div>
           <div className="form-group">
-            <label>Data Início *</label>
+            <label>Data Início</label>
             <input
               type="date"
               value={filters.data_inicio || ''}
@@ -101,12 +105,24 @@ export default function MovimentacoesCRUD() {
             />
           </div>
           <div className="form-group">
-            <label>Data Fim *</label>
+            <label>Data Fim</label>
             <input
               type="date"
               value={filters.data_fim || ''}
               onChange={(e) => handleFilterChange('data_fim', e.target.value)}
             />
+          </div>
+          <div className="form-group">
+            <label>Local</label>
+            <select
+              value={filters.local_id || ''}
+              onChange={(e) => handleFilterChange('local_id', e.target.value ? Number(e.target.value) : undefined)}
+            >
+              <option value="">Todos</option>
+              {locais.map(local => (
+                <option key={local.id} value={local.id}>{local.codigo} - {local.nome}</option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label>Tipo</label>
@@ -133,28 +149,45 @@ export default function MovimentacoesCRUD() {
 
       <div className="content">
         {!hasSearched ? (
-          <div className="empty">Selecione os filtros e clique em "Consultar" para visualizar as movimentações</div>
+          <div className="empty">Selecione um item e clique em "Consultar" para carregar as movimentações.</div>
         ) : loading ? (
           <div className="loading">Carregando...</div>
         ) : (
-          <div className="table-wrapper">
-            <table>
+          <>
+            {movimentacoes.length > 0 && movimentacoes[0].saldo_anterior !== undefined && (
+              <div className="saldo-inicial-card">
+                <div className="saldo-inicial-label">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                  </svg>
+                  <span>Saldo Inicial</span>
+                </div>
+                <div className="saldo-inicial-valor">
+                  {movimentacoes[0].saldo_anterior}
+                  {movimentacoes[0].unidade_sigla && <span className="unidade"> {movimentacoes[0].unidade_sigla}</span>}
+                </div>
+              </div>
+            )}
+            <div className="table-wrapper">
+              <table>
               <thead>
                 <tr>
                   <th>Data</th>
                   <th>Tipo</th>
-                  <th>Item</th>
+                  <th>Número</th>
+                  <th>Série</th>
                   <th>Lote</th>
-                  <th>Saída</th>
-                  <th>Entrada</th>
+                  <th>Local</th>
+                  <th>Unidade</th>
                   <th className="text-right">Qtd</th>
-                  <th className="text-right">Saldo Atualizado</th>
+                  <th className="text-right">Saldo</th>
                 </tr>
               </thead>
               <tbody>
                 {movimentacoes.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="empty">Nenhuma movimentação encontrada</td>
+                    <td colSpan={9} className="empty">Nenhuma movimentação encontrada</td>
                   </tr>
                 ) : (
                   movimentacoes.map((mov) => (
@@ -165,11 +198,12 @@ export default function MovimentacoesCRUD() {
                           {mov.tipo}
                         </span>
                       </td>
-                      <td>{mov.item_nome || '-'}</td>
+                      <td>{mov.numero || '-'}</td>
+                      <td>{mov.serie || '-'}</td>
                       <td>{mov.lote_codigo || '-'}</td>
-                      <td>{mov.local_origem_nome || '-'}</td>
-                      <td>{mov.local_destino_nome || '-'}</td>
-                      <td className="text-right">{mov.quantidade} {mov.unidade_sigla}</td>
+                      <td>{mov.local_nome || '-'}</td>
+                      <td>{mov.unidade_sigla || '-'}</td>
+                      <td className="text-right">{mov.quantidade}</td>
                       <td className="text-right saldo">{mov.saldo_atual !== undefined ? mov.saldo_atual : '-'}</td>
                     </tr>
                   ))
@@ -177,6 +211,7 @@ export default function MovimentacoesCRUD() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -472,6 +507,46 @@ export default function MovimentacoesCRUD() {
         .badge-ajuste {
           background: #e0e7ff;
           color: #3730a3;
+        }
+
+        .saldo-inicial-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          margin-bottom: 1rem;
+          background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+          border-left: 4px solid #0284c7;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .saldo-inicial-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #0c4a6e;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .saldo-inicial-label svg {
+          color: #0284c7;
+        }
+
+        .saldo-inicial-valor {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #0c4a6e;
+        }
+
+        .saldo-inicial-valor .unidade {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #0369a1;
+          margin-left: 0.25rem;
         }
       `}</style>
     </div>

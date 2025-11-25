@@ -17,79 +17,92 @@ from app.modules.estoque.models import MovimentacaoEstoque
 router = APIRouter()
 
 
-def calcular_saldos_movimentacoes(db: Session, movimentacoes: List[MovimentacaoEstoque]) -> List[Movimentacao]:
-    """Calcula saldo_anterior e saldo_atual para cada movimentação"""
-    resultado = []
-    
+def calcular_saldos_movimentacoes(
+    db: Session, 
+    movimentacoes: List[MovimentacaoEstoque],
+    item_id: Optional[int] = None,
+    local_id: Optional[int] = None,
+    data_inicio: Optional[date] = None
+) -> List[Movimentacao]:
+    """Calcula saldo_anterior e saldo_atual de forma sequencial sobre a lista exibida.
+
+    Regras:
+    - Tipos de entrada somam: ENTRADA, AJUSTE_ENTRADA, INVENTARIO, PRODUCAO, DEVOLUCAO
+    - Tipos de saída subtraem: SAIDA, AJUSTE_SAIDA, TRANSFERENCIA
+    - Saldo inicial calculado antes do período/filtro exibido
+    - Saldo atualizado sequencialmente linha a linha na ordem exibida
+    """
+    tipos_entrada = {'ENTRADA', 'AJUSTE_ENTRADA', 'INVENTARIO', 'PRODUCAO', 'DEVOLUCAO'}
+    tipos_saida = {'SAIDA', 'AJUSTE_SAIDA', 'TRANSFERENCIA'}
+
+    # Calcular saldo inicial (antes da primeira movimentação exibida)
+    saldo_inicial = Decimal('0')
+    if movimentacoes and item_id:
+        primeira_data = movimentacoes[0].data_movimentacao
+        
+        # Buscar todas as movimentações anteriores à primeira exibida
+        query = db.query(MovimentacaoEstoque).filter(
+            MovimentacaoEstoque.item_id == item_id,
+            MovimentacaoEstoque.data_movimentacao < primeira_data
+        )
+        
+        # Se filtrou por local, considerar apenas esse local no saldo inicial
+        if local_id:
+            query = query.filter(MovimentacaoEstoque.local_id == local_id)
+        
+        movs_anteriores = query.order_by(MovimentacaoEstoque.data_movimentacao).all()
+        
+        for mov_ant in movs_anteriores:
+            tipo_val = mov_ant.tipo.value if hasattr(mov_ant.tipo, 'value') else str(mov_ant.tipo)
+            if tipo_val in tipos_entrada:
+                saldo_inicial += mov_ant.quantidade
+            elif tipo_val in tipos_saida:
+                saldo_inicial -= mov_ant.quantidade
+
+    # Aplicar movimentações sequencialmente
+    saldo_atual = saldo_inicial
+    resultado: List[Movimentacao] = []
+
     for mov in movimentacoes:
-        # Converter para dict do schema
+        saldo_anterior = saldo_atual
+
+        # Ajustar saldo conforme tipo
+        tipo_val = mov.tipo.value if hasattr(mov.tipo, 'value') else str(mov.tipo)
+        if tipo_val in tipos_entrada:
+            saldo_atual = saldo_anterior + mov.quantidade
+        elif tipo_val in tipos_saida:
+            saldo_atual = saldo_anterior - mov.quantidade
+        else:
+            # Tipos desconhecidos não alteram saldo
+            saldo_atual = saldo_anterior
+
         mov_dict = {
             "id": mov.id,
             "tipo": mov.tipo,
             "item_id": mov.item_id,
+            "item_codigo": mov.item.codigo if mov.item else None,
+            "item_nome": mov.item.descricao if mov.item else None,
             "quantidade": mov.quantidade,
             "unidade_id": mov.unidade_id,
+            "unidade_sigla": mov.unidade.sigla if mov.unidade else None,
             "lote_id": mov.lote_id,
-            "local_origem_id": mov.local_origem_id,
-            "local_destino_id": mov.local_destino_id,
+            "lote_codigo": mov.lote.codigo if mov.lote else None,
+            "local_id": mov.local_id,
+            "local_nome": mov.local.nome if mov.local else None,
             "data_movimentacao": mov.data_movimentacao,
-            "documento": mov.documento,
+            "numero": mov.numero,
+            "serie": mov.serie,
             "observacoes": mov.observacoes,
             "custo_unitario": mov.custo_unitario,
             "usuario": mov.usuario,
             "created_at": mov.created_at,
             "updated_at": mov.updated_at,
+            "saldo_anterior": saldo_anterior,
+            "saldo_atual": saldo_atual,
         }
-        
-        # Calcular saldos baseado no tipo de movimentação
-        local_id = None
-        if mov.tipo.value in ['Entrada', 'Ajuste Positivo']:
-            local_id = mov.local_destino_id
-        elif mov.tipo.value in ['Saida', 'Ajuste Negativo']:
-            local_id = mov.local_origem_id
-        elif mov.tipo.value == 'Transferencia':
-            local_id = mov.local_origem_id  # Mostra saldo da origem
-        
-        if local_id:
-            # Buscar todas as movimentações anteriores para calcular saldo
-            movs_anteriores = db.query(MovimentacaoEstoque).filter(
-                and_(
-                    MovimentacaoEstoque.item_id == mov.item_id,
-                    MovimentacaoEstoque.data_movimentacao < mov.data_movimentacao,
-                    or_(
-                        MovimentacaoEstoque.local_origem_id == local_id,
-                        MovimentacaoEstoque.local_destino_id == local_id
-                    )
-                )
-            ).order_by(MovimentacaoEstoque.data_movimentacao).all()
-            
-            # Calcular saldo anterior
-            saldo_anterior = Decimal('0')
-            for mov_ant in movs_anteriores:
-                if mov_ant.tipo.value in ['Entrada', 'Ajuste Positivo'] and mov_ant.local_destino_id == local_id:
-                    saldo_anterior += mov_ant.quantidade
-                elif mov_ant.tipo.value in ['Saida', 'Ajuste Negativo'] and mov_ant.local_origem_id == local_id:
-                    saldo_anterior -= mov_ant.quantidade
-                elif mov_ant.tipo.value == 'Transferencia':
-                    if mov_ant.local_destino_id == local_id:
-                        saldo_anterior += mov_ant.quantidade
-                    elif mov_ant.local_origem_id == local_id:
-                        saldo_anterior -= mov_ant.quantidade
-            
-            # Calcular saldo atual
-            saldo_atual = saldo_anterior
-            if mov.tipo.value in ['Entrada', 'Ajuste Positivo'] and mov.local_destino_id == local_id:
-                saldo_atual += mov.quantidade
-            elif mov.tipo.value in ['Saida', 'Ajuste Negativo'] and mov.local_origem_id == local_id:
-                saldo_atual -= mov.quantidade
-            elif mov.tipo.value == 'Transferencia' and mov.local_origem_id == local_id:
-                saldo_atual -= mov.quantidade
-            
-            mov_dict["saldo_anterior"] = saldo_anterior
-            mov_dict["saldo_atual"] = saldo_atual
-        
+
         resultado.append(Movimentacao(**mov_dict))
-    
+
     return resultado
 
 
@@ -104,24 +117,19 @@ def listar_movimentacoes(
     data_fim: Optional[date] = Query(None, description="Data final"),
     db: Session = Depends(get_db)
 ):
-    """Lista movimentações com filtros opcionais"""
-    if data_inicio and data_fim:
-        movimentacoes = movimentacao_repository.get_by_periodo(
-            db,
-            data_inicio=data_inicio,
-            data_fim=data_fim,
-            item_id=item_id,
-            local_id=local_id,
-            tipo=tipo,
-            skip=skip,
-            limit=limit
-        )
-    elif item_id:
-        movimentacoes = movimentacao_repository.get_by_item(db, item_id=item_id, skip=skip, limit=limit)
-    else:
-        movimentacoes = movimentacao_repository.get_multi(db, skip=skip, limit=limit)
-    
-    return calcular_saldos_movimentacoes(db, movimentacoes)
+    """Lista movimentações com filtros opcionais combináveis (datas, item, local, tipo)."""
+    movimentacoes = movimentacao_repository.get_filtered(
+        db,
+        item_id=item_id,
+        local_id=local_id,
+        tipo=tipo,
+        data_inicio=data_inicio,
+        data_fim=data_fim,
+        skip=skip,
+        limit=limit,
+    )
+
+    return calcular_saldos_movimentacoes(db, movimentacoes, item_id, local_id, data_inicio)
 
 
 @router.get("/{movimentacao_id}", response_model=Movimentacao)

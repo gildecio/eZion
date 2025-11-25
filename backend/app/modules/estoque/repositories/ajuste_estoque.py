@@ -57,9 +57,9 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
             # Processar movimentações e atualizar saldos para cada item
             for item in db_obj.itens:
                 # Determinar tipo de movimentação
-                tipo_mov = (TipoMovimentacao.Ajuste_Entrada 
+                tipo_mov = (TipoMovimentacao.AJUSTE_ENTRADA 
                            if db_obj.tipo == 'E' 
-                           else TipoMovimentacao.Ajuste_Saida)
+                           else TipoMovimentacao.AJUSTE_SAIDA)
                 
                 # Buscar fator de conversão da embalagem se houver
                 quantidade_convertida = item.quantidade
@@ -69,19 +69,30 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
                     if embalagem:
                         quantidade_convertida = item.quantidade * embalagem.fator_conversao
                 
-                # Criar movimentação
+                # Determinar local (usar local padrão do item se não especificado)
+                local_id = item.local_id
+                if not local_id:
+                    from app.modules.estoque.models.item import Item
+                    item_obj = db.query(Item).filter(Item.id == item.item_id).first()
+                    if item_obj:
+                        local_id = item_obj.local_padrao_entrada_id if db_obj.tipo == 'E' else item_obj.local_padrao_saida_id
+                
+                # Criar movimentação usando a data_entrada do ajuste
+                from datetime import datetime, time
+                data_movimentacao = datetime.combine(db_obj.data_entrada, time(12, 0, 0)) if db_obj.data_entrada else None
+                
                 movimentacao_data = MovimentacaoCreate(
                     tipo=tipo_mov,
                     item_id=item.item_id,
                     quantidade=quantidade_convertida,
                     unidade_id=self._get_unidade_from_item(db, item.item_id),
                     lote_id=item.lote_id,
-                    local_destino_id=item.local_id if db_obj.tipo == 'E' else None,
-                    local_origem_id=item.local_id if db_obj.tipo == 'S' else None,
+                    local_id=local_id,
                     numero=db_obj.numero,
                     serie=db_obj.serie,
                     custo_unitario=item.valor_unitario,
-                    observacoes=item.observacao
+                    observacoes=item.observacao,
+                    data_movimentacao=data_movimentacao
                 )
                 
                 # Processar através do EstoqueService
@@ -100,28 +111,103 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
         return item.unidade_padrao_id if item else None
     
     def update_with_itens(self, db: Session, db_obj: AjusteEstoque, obj_in: AjusteEstoqueUpdate) -> AjusteEstoque:
-        """Atualiza um ajuste e seus itens"""
-        update_data = obj_in.model_dump(exclude_unset=True, exclude={'itens'})
-        
-        for field, value in update_data.items():
-            setattr(db_obj, field, value)
-        
-        # Update items if provided
-        if obj_in.itens is not None:
-            # Remove existing items
-            db.query(AjusteEstoqueItem).filter(
-                AjusteEstoqueItem.ajuste_id == db_obj.id
-            ).delete()
+        """Atualiza um ajuste e seus itens, recalculando movimentações e saldos"""
+        try:
+            # Armazenar número e série antes da atualização
+            numero_antigo = db_obj.numero
+            serie_antiga = db_obj.serie
             
-            # Add new items
-            for item_data in obj_in.itens:
-                item_dict = item_data.model_dump() if hasattr(item_data, 'model_dump') else item_data.dict()
-                item_obj = AjusteEstoqueItem(**item_dict, ajuste_id=db_obj.id)
-                db.add(item_obj)
-        
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+            # Atualizar dados do ajuste
+            update_data = obj_in.model_dump(exclude_unset=True, exclude={'itens'})
+            
+            for field, value in update_data.items():
+                setattr(db_obj, field, value)
+            
+            # Se itens foram fornecidos, atualizar
+            if obj_in.itens is not None:
+                # 1. Excluir movimentações antigas relacionadas a este ajuste
+                from app.modules.estoque.models.movimentacao import MovimentacaoEstoque
+                from app.modules.estoque.models.saldo import SaldoEstoque
+                
+                movs_antigas = db.query(MovimentacaoEstoque).filter(
+                    MovimentacaoEstoque.numero == numero_antigo,
+                    MovimentacaoEstoque.serie == serie_antiga
+                ).all()
+                
+                # Guardar info para reverter saldos
+                itens_afetados = [(m.item_id, m.local_id) for m in movs_antigas]
+                
+                # Excluir movimentações
+                for mov in movs_antigas:
+                    db.delete(mov)
+                
+                # 2. Excluir itens antigos do ajuste
+                db.query(AjusteEstoqueItem).filter(
+                    AjusteEstoqueItem.ajuste_id == db_obj.id
+                ).delete()
+                
+                # 3. Adicionar novos itens
+                for item_data in obj_in.itens:
+                    item_dict = item_data.model_dump() if hasattr(item_data, 'model_dump') else item_data.dict()
+                    item_obj = AjusteEstoqueItem(**item_dict, ajuste_id=db_obj.id)
+                    db.add(item_obj)
+                
+                db.flush()
+                
+                # 4. Criar novas movimentações
+                for item in db_obj.itens:
+                    # Determinar tipo de movimentação
+                    tipo_mov = (TipoMovimentacao.AJUSTE_ENTRADA 
+                               if db_obj.tipo == 'E' 
+                               else TipoMovimentacao.AJUSTE_SAIDA)
+                    
+                    # Buscar fator de conversão da embalagem se houver
+                    quantidade_convertida = item.quantidade
+                    if item.embalagem_id:
+                        from app.modules.estoque.models.embalagem_item import EmbalagemItem
+                        embalagem = db.query(EmbalagemItem).filter(EmbalagemItem.id == item.embalagem_id).first()
+                        if embalagem:
+                            quantidade_convertida = item.quantidade * embalagem.fator_conversao
+                    
+                    # Determinar local (usar local padrão do item se não especificado)
+                    local_id = item.local_id
+                    if not local_id:
+                        from app.modules.estoque.models.item import Item
+                        item_obj = db.query(Item).filter(Item.id == item.item_id).first()
+                        if item_obj:
+                            local_id = item_obj.local_padrao_entrada_id if db_obj.tipo == 'E' else item_obj.local_padrao_saida_id
+                    
+                    # Criar movimentação usando a data_entrada do ajuste
+                    from datetime import datetime, time
+                    data_movimentacao = datetime.combine(db_obj.data_entrada, time(12, 0, 0)) if db_obj.data_entrada else None
+                    
+                    movimentacao_data = MovimentacaoCreate(
+                        tipo=tipo_mov,
+                        item_id=item.item_id,
+                        quantidade=quantidade_convertida,
+                        unidade_id=self._get_unidade_from_item(db, item.item_id),
+                        lote_id=item.lote_id,
+                        local_id=local_id,
+                        numero=db_obj.numero,
+                        serie=db_obj.serie,
+                        custo_unitario=item.valor_unitario,
+                        observacoes=item.observacao,
+                        data_movimentacao=data_movimentacao
+                    )
+                    
+                    # Processar através do EstoqueService
+                    EstoqueService.processar_ajuste(db, movimentacao_data)
+            
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
+            
+        except Exception as e:
+            db.rollback()
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao atualizar ajuste: {str(e)}", exc_info=True)
+            raise
 
 
 class AjusteEstoqueItemRepository(CRUDBase[AjusteEstoqueItem, dict, dict]):

@@ -6,14 +6,14 @@ from enum import Enum
 
 
 class TipoMovimentacao(str, Enum):
-    Entrada = "Entrada"
-    Saida = "Saida"
-    Transferencia = "Transferencia"
-    Ajuste_Entrada = "Ajuste Entrada"
-    Ajuste_Saida = "Ajuste Saida"
-    Inventario = "Inventario"
-    Producao = "Producao"
-    Devolucao = "Devolucao"
+    ENTRADA = "ENTRADA"
+    SAIDA = "SAIDA"
+    TRANSFERENCIA = "TRANSFERENCIA"
+    AJUSTE_ENTRADA = "AJUSTE_ENTRADA"
+    AJUSTE_SAIDA = "AJUSTE_SAIDA"
+    INVENTARIO = "INVENTARIO"
+    PRODUCAO = "PRODUCAO"
+    DEVOLUCAO = "DEVOLUCAO"
 
 
 # Schemas para MovimentacaoEstoque
@@ -23,8 +23,7 @@ class MovimentacaoBase(BaseModel):
     quantidade: Decimal = Field(..., gt=0, description="Quantidade movimentada")
     unidade_id: int = Field(..., description="ID da unidade de medida")
     lote_id: Optional[int] = Field(None, description="ID do lote (opcional)")
-    local_origem_id: Optional[int] = Field(None, description="ID do local de origem")
-    local_destino_id: Optional[int] = Field(None, description="ID do local de destino")
+    local_id: Optional[int] = Field(None, description="ID do local da movimentação")
     numero: Optional[str] = Field(None, max_length=50, description="Número do documento")
     serie: Optional[str] = Field(None, max_length=10, description="Série do documento")
     observacoes: Optional[str] = Field(None, description="Observações")
@@ -47,11 +46,19 @@ class Movimentacao(MovimentacaoBase):
     data_movimentacao: datetime
     saldo_anterior: Optional[Decimal] = None
     saldo_atual: Optional[Decimal] = None
+    item_codigo: Optional[str] = None
+    item_nome: Optional[str] = None
+    unidade_sigla: Optional[str] = None
+    lote_codigo: Optional[str] = None
+    local_nome: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: str(v).replace('.', ',') if v is not None else None
+        }
 
 
 # Schema para consulta com dados completos
@@ -60,5 +67,4 @@ class MovimentacaoDetalhada(Movimentacao):
     item_descricao: Optional[str] = None
     unidade_sigla: Optional[str] = None
     lote_codigo: Optional[str] = None
-    local_origem_nome: Optional[str] = None
-    local_destino_nome: Optional[str] = None
+    # Mantido apenas um local

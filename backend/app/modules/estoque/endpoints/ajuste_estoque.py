@@ -81,6 +81,11 @@ def update_ajuste(
     db: Session = Depends(get_db)
 ):
     """Atualiza um ajuste de estoque"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Recebendo update para ajuste_id={ajuste_id}")
+    logger.info(f"Dados recebidos: {ajuste.model_dump()}")
+    
     db_ajuste = ajuste_estoque_repository.get(db, ajuste_id)
     
     if not db_ajuste:
@@ -95,7 +100,11 @@ def update_ajuste(
                 detail=f"Já existe um ajuste com o número {ajuste.numero}"
             )
     
-    return ajuste_estoque_repository.update_with_itens(db, db_ajuste, ajuste)
+    try:
+        return ajuste_estoque_repository.update_with_itens(db, db_ajuste, ajuste)
+    except Exception as e:
+        logger.error(f"Erro no update_ajuste endpoint: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{ajuste_id}", status_code=204)
 def delete_ajuste(ajuste_id: int, db: Session = Depends(get_db)):

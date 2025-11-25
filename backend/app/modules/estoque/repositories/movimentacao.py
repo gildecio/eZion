@@ -35,7 +35,7 @@ class MovimentacaoRepository(CRUDBase[MovimentacaoEstoque, MovimentacaoCreate, M
         return (
             db.query(self.model)
             .filter(self.model.item_id == item_id)
-            .order_by(self.model.data_movimentacao.desc())
+            .order_by(self.model.data_movimentacao.asc(), self.model.id.asc())
             .offset(skip)
             .limit(limit)
             .all()
@@ -65,19 +65,49 @@ class MovimentacaoRepository(CRUDBase[MovimentacaoEstoque, MovimentacaoCreate, M
             query = query.filter(self.model.item_id == item_id)
         
         if local_id:
-            query = query.filter(
-                or_(
-                    self.model.local_origem_id == local_id,
-                    self.model.local_destino_id == local_id
-                )
-            )
+            query = query.filter(self.model.local_id == local_id)
         
         if tipo:
             query = query.filter(self.model.tipo == tipo)
         
         return (
             query
-            .order_by(self.model.data_movimentacao.desc())
+            .order_by(self.model.data_movimentacao.asc(), self.model.id.asc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    def get_filtered(
+        self,
+        db: Session,
+        *,
+        item_id: Optional[int] = None,
+        local_id: Optional[int] = None,
+        tipo: Optional[TipoMovimentacao] = None,
+        data_inicio: Optional[date] = None,
+        data_fim: Optional[date] = None,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[MovimentacaoEstoque]:
+        """Busca movimentações com filtros opcionais (datas, item, local e tipo)."""
+        query = db.query(self.model)
+
+        if data_inicio:
+            query = query.filter(self.model.data_movimentacao >= datetime.combine(data_inicio, datetime.min.time()))
+        if data_fim:
+            query = query.filter(self.model.data_movimentacao <= datetime.combine(data_fim, datetime.max.time()))
+
+        if item_id:
+            query = query.filter(self.model.item_id == item_id)
+        if local_id:
+            query = query.filter(self.model.local_id == local_id)
+        if tipo:
+            query = query.filter(self.model.tipo == tipo)
+
+        return (
+            query
+            .order_by(self.model.data_movimentacao.asc(), self.model.id.asc())
             .offset(skip)
             .limit(limit)
             .all()

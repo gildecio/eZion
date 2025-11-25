@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_serializer, validator
 from typing import Optional, List
 from datetime import date
 from decimal import Decimal
@@ -12,6 +12,10 @@ class AjusteEstoqueItemBase(BaseModel):
     lote_id: Optional[int] = None
     local_id: Optional[int] = None
     observacao: Optional[str] = Field(None, max_length=500)
+    
+    @field_serializer('quantidade', 'valor_unitario', 'valor_total', when_used='json')
+    def serialize_decimal(self, v: Decimal) -> str:
+        return str(v).replace('.', ',') if v is not None else None
 
 class AjusteEstoqueItemCreate(AjusteEstoqueItemBase):
     pass
@@ -28,6 +32,9 @@ class AjusteEstoqueItemInDB(AjusteEstoqueItemBase):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: str(v).replace('.', ',') if v is not None else None
+        }
 
 class AjusteEstoqueBase(BaseModel):
     data_entrada: date
@@ -63,7 +70,12 @@ class AjusteEstoqueUpdate(BaseModel):
         return v
 
 class AjusteEstoqueInDB(BaseModel):
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_encoders": {
+            Decimal: lambda v: str(v).replace('.', ',') if v is not None else None
+        }
+    }
     
     id: int
     numero: str

@@ -5,4 +5,3 @@ export * from './grupo-item';
 export * from './lote';
 export * from './movimentacao';
 export * from './saldo';
-export * from './documento';

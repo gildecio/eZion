@@ -36,38 +36,26 @@ class EstoqueService:
                 detail="Item não encontrado"
             )
         
-        # Validar locais conforme o tipo de movimentação
-        if movimentacao.tipo == TipoMovimentacao.Entrada:
-            if not movimentacao.local_destino_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Local de destino é obrigatório para entradas"
-                )
-            local = local_repository.get(db, id=movimentacao.local_destino_id)
-            if not local:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Local de destino não encontrado"
-                )
+        # Validar local
+        if not movimentacao.local_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Local é obrigatório"
+            )
         
-        elif movimentacao.tipo == TipoMovimentacao.Saida:
-            if not movimentacao.local_origem_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Local de origem é obrigatório para saídas"
-                )
-            local = local_repository.get(db, id=movimentacao.local_origem_id)
-            if not local:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Local de origem não encontrado"
-                )
-            
-            # Verificar saldo disponível
+        local = local_repository.get(db, id=movimentacao.local_id)
+        if not local:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Local não encontrado"
+            )
+        
+        # Verificar saldo disponível para saídas normais (não ajustes)
+        if movimentacao.tipo == TipoMovimentacao.SAIDA:
             saldo = saldo_repository.get_or_create(
                 db,
                 item_id=movimentacao.item_id,
-                local_id=movimentacao.local_origem_id,
+                local_id=movimentacao.local_id,
                 lote_id=movimentacao.lote_id
             )
             
@@ -75,33 +63,6 @@ class EstoqueService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Saldo insuficiente. Disponível: {saldo.quantidade}, Solicitado: {movimentacao.quantidade}"
-                )
-        
-        elif movimentacao.tipo == TipoMovimentacao.Transferencia:
-            if not movimentacao.local_origem_id or not movimentacao.local_destino_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Local de origem e destino são obrigatórios para transferências"
-                )
-            
-            if movimentacao.local_origem_id == movimentacao.local_destino_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Local de origem e destino não podem ser iguais"
-                )
-            
-            # Verificar saldo no local de origem
-            saldo = saldo_repository.get_or_create(
-                db,
-                item_id=movimentacao.item_id,
-                local_id=movimentacao.local_origem_id,
-                lote_id=movimentacao.lote_id
-            )
-            
-            if saldo.quantidade < movimentacao.quantidade:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Saldo insuficiente no local de origem. Disponível: {saldo.quantidade}"
                 )
         
         # Validar lote se informado
@@ -128,7 +89,7 @@ class EstoqueService:
         saldo_repository.atualizar_saldo(
             db,
             item_id=movimentacao.item_id,
-            local_id=movimentacao.local_destino_id,
+            local_id=movimentacao.local_id,
             lote_id=movimentacao.lote_id,
             quantidade_delta=movimentacao.quantidade,
             custo_unitario=movimentacao.custo_unitario
@@ -151,49 +112,9 @@ class EstoqueService:
         saldo_repository.atualizar_saldo(
             db,
             item_id=movimentacao.item_id,
-            local_id=movimentacao.local_origem_id,
+            local_id=movimentacao.local_id,
             lote_id=movimentacao.lote_id,
             quantidade_delta=-movimentacao.quantidade
-        )
-        
-        return mov
-    
-    @staticmethod
-    def processar_transferencia(
-        db: Session,
-        movimentacao: MovimentacaoCreate
-    ) -> Movimentacao:
-        """Processa uma transferência entre locais"""
-        EstoqueService.validar_movimentacao(db, movimentacao)
-        
-        # Criar a movimentação
-        mov = movimentacao_repository.create(db, obj_in=movimentacao)
-        
-        # Obter custo médio do local de origem
-        saldo_origem = saldo_repository.get_or_create(
-            db,
-            item_id=movimentacao.item_id,
-            local_id=movimentacao.local_origem_id,
-            lote_id=movimentacao.lote_id
-        )
-        
-        # Diminuir saldo no local de origem
-        saldo_repository.atualizar_saldo(
-            db,
-            item_id=movimentacao.item_id,
-            local_id=movimentacao.local_origem_id,
-            lote_id=movimentacao.lote_id,
-            quantidade_delta=-movimentacao.quantidade
-        )
-        
-        # Aumentar saldo no local de destino (mantendo o custo médio)
-        saldo_repository.atualizar_saldo(
-            db,
-            item_id=movimentacao.item_id,
-            local_id=movimentacao.local_destino_id,
-            lote_id=movimentacao.lote_id,
-            quantidade_delta=movimentacao.quantidade,
-            custo_unitario=saldo_origem.custo_medio
         )
         
         return mov
@@ -205,26 +126,24 @@ class EstoqueService:
     ) -> Movimentacao:
         """
         Processa um ajuste de estoque (inventário).
-        Pode ser positivo ou negativo.
+        Pode ser positivo (entrada) ou negativo (saída).
         """
         EstoqueService.validar_movimentacao(db, movimentacao)
         
         # Criar a movimentação
         mov = movimentacao_repository.create(db, obj_in=movimentacao)
         
-        # Determinar o local e a quantidade delta
-        if movimentacao.tipo == TipoMovimentacao.Ajuste_Positivo:
-            local_id = movimentacao.local_destino_id
+        # Determinar a quantidade delta baseado no tipo
+        if movimentacao.tipo == TipoMovimentacao.AJUSTE_ENTRADA:
             quantidade_delta = movimentacao.quantidade
-        else:  # AJUSTE_NEGATIVO
-            local_id = movimentacao.local_origem_id
+        else:  # AJUSTE_SAIDA
             quantidade_delta = -movimentacao.quantidade
         
         # Atualizar saldo
         saldo_repository.atualizar_saldo(
             db,
             item_id=movimentacao.item_id,
-            local_id=local_id,
+            local_id=movimentacao.local_id,
             lote_id=movimentacao.lote_id,
             quantidade_delta=quantidade_delta,
             custo_unitario=movimentacao.custo_unitario
@@ -241,16 +160,13 @@ class EstoqueService:
         Processa uma movimentação de estoque de acordo com seu tipo.
         Atualiza automaticamente os saldos.
         """
-        if movimentacao.tipo == TipoMovimentacao.Entrada:
+        if movimentacao.tipo == TipoMovimentacao.ENTRADA:
             return EstoqueService.processar_entrada(db, movimentacao)
         
-        elif movimentacao.tipo == TipoMovimentacao.Saida:
+        elif movimentacao.tipo == TipoMovimentacao.SAIDA:
             return EstoqueService.processar_saida(db, movimentacao)
         
-        elif movimentacao.tipo == TipoMovimentacao.Transferencia:
-            return EstoqueService.processar_transferencia(db, movimentacao)
-        
-        elif movimentacao.tipo in [TipoMovimentacao.Ajuste_Positivo, TipoMovimentacao.Ajuste_Negativo]:
+        elif movimentacao.tipo in [TipoMovimentacao.AJUSTE_ENTRADA, TipoMovimentacao.AJUSTE_SAIDA]:
             return EstoqueService.processar_ajuste(db, movimentacao)
         
         else:

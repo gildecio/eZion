@@ -30,6 +30,9 @@ class Saldo(SaldoBase):
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: str(v).replace('.', ',') if v is not None else None
+        }
 
 
 # Schema para consulta com dados completos
