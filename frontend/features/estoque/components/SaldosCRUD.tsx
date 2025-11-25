@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { useSaldos } from '../hooks/useSaldos';
 import { useItens } from '../hooks/useItens';
 import { useLocais } from '../hooks';
+import { useGruposItem } from '../hooks/useGruposItem';
 import type { SaldoFilters } from '../types/saldo';
 
 export default function SaldosCRUD() {
   const [filters, setFilters] = useState<SaldoFilters>({});
+  const [grupoIdFilter, setGrupoIdFilter] = useState<number | undefined>();
   const { saldos, loading, error, getTotalValue } = useSaldos(filters);
   const { itens } = useItens();
   const { locais } = useLocais();
+  const { grupos } = useGruposItem();
 
   const handleFilterChange = (key: keyof SaldoFilters, value: any) => {
     setFilters(prev => {
@@ -24,6 +27,14 @@ export default function SaldosCRUD() {
 
   const clearFilters = () => {
     setFilters({});
+    setGrupoIdFilter(undefined);
+  };
+
+  const getItensFiltrados = () => {
+    if (!grupoIdFilter) {
+      return itens;
+    }
+    return itens.filter(item => item.grupo_id === grupoIdFilter);
   };
 
   const formatCurrency = (value: number) => {
@@ -63,13 +74,32 @@ export default function SaldosCRUD() {
         <h3>Filtros</h3>
         <div className="filtros-grid">
           <div className="form-group">
+            <label>Grupo</label>
+            <select
+              value={grupoIdFilter || ''}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : undefined;
+                setGrupoIdFilter(value);
+                // Limpa o item selecionado ao mudar de grupo
+                if (value) {
+                  handleFilterChange('item_id', undefined);
+                }
+              }}
+            >
+              <option value="">Todos os grupos</option>
+              {grupos.map(grupo => (
+                <option key={grupo.id} value={grupo.id}>{grupo.nome}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
             <label>Item</label>
             <select
               value={filters.item_id || ''}
               onChange={(e) => handleFilterChange('item_id', e.target.value)}
             >
               <option value="">Todos os itens</option>
-              {itens.map(item => (
+              {getItensFiltrados().map(item => (
                 <option key={item.id} value={item.id}>{item.codigo} - {item.descricao}</option>
               ))}
             </select>
