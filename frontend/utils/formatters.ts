@@ -44,11 +44,36 @@ export function unformatCPF(cpf: string): string {
 /**
  * Formata valor monetário em Real (BRL)
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number | string): string {
+  const numValue = parseDecimal(value);
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numValue);
+}
+
+/**
+ * Formata quantidade/peso (3 casas decimais)
+ */
+export function formatQuantity(value: number | string): string {
+  const numValue = parseDecimal(value);
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  }).format(numValue);
+}
+
+/**
+ * Converte string com vírgula (formato brasileiro) para número
+ */
+export function parseDecimal(value: any): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    return parseFloat(value.replace(',', '.'));
+  }
+  return 0;
 }
 
 /**

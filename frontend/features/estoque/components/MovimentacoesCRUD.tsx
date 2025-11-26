@@ -6,6 +6,7 @@ import { TipoMovimentacao } from '../types/movimentacao';
 import type {
   MovimentacaoFilters,
 } from '../types/movimentacao';
+import { formatQuantity, parseDecimal } from '../../../utils/formatters';
 
 export default function MovimentacoesCRUD() {
   const [filters, setFilters] = useState<MovimentacaoFilters>({});
@@ -164,7 +165,7 @@ export default function MovimentacoesCRUD() {
                   <span>Saldo Inicial</span>
                 </div>
                 <div className="saldo-inicial-valor">
-                  {movimentacoes[0].saldo_anterior}
+                  {formatQuantity(movimentacoes[0].saldo_anterior)}
                   {movimentacoes[0].unidade_sigla && <span className="unidade"> {movimentacoes[0].unidade_sigla}</span>}
                 </div>
               </div>
@@ -179,7 +180,6 @@ export default function MovimentacoesCRUD() {
                   <th>Série</th>
                   <th>Lote</th>
                   <th>Local</th>
-                  <th>Unidade</th>
                   <th className="text-right">Qtd</th>
                   <th className="text-right">Saldo</th>
                 </tr>
@@ -187,7 +187,7 @@ export default function MovimentacoesCRUD() {
               <tbody>
                 {movimentacoes.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="empty">Nenhuma movimentação encontrada</td>
+                    <td colSpan={8} className="empty">Nenhuma movimentação encontrada</td>
                   </tr>
                 ) : (
                   movimentacoes.map((mov) => (
@@ -202,9 +202,12 @@ export default function MovimentacoesCRUD() {
                       <td>{mov.serie || '-'}</td>
                       <td>{mov.lote_codigo || '-'}</td>
                       <td>{mov.local_nome || '-'}</td>
-                      <td>{mov.unidade_sigla || '-'}</td>
-                      <td className="text-right">{mov.quantidade}</td>
-                      <td className="text-right saldo">{mov.saldo_atual !== undefined ? mov.saldo_atual : '-'}</td>
+                      <td className="text-right quantidade-col">
+                        {formatQuantity(mov.quantidade)} <span className="unidade-sigla">{mov.unidade_sigla || 'UN'}</span>
+                      </td>
+                      <td className="text-right saldo-col">
+                        {mov.saldo_atual !== undefined ? formatQuantity(mov.saldo_atual) : '-'} <span className="unidade-sigla">{mov.unidade_sigla || 'UN'}</span>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -464,6 +467,14 @@ export default function MovimentacoesCRUD() {
 
         td.text-right {
           text-align: right;
+        }
+
+        .unidade-sigla {
+          font-size: 0.75rem;
+          color: #6b7280;
+          font-weight: 500;
+          text-transform: uppercase;
+          margin-left: 0.25rem;
         }
 
         td.valor {

@@ -5,6 +5,7 @@ import { LoteService } from '../services/lote.service';
 import { localService } from '../services/local-service';
 import { embalagemService } from '../services/embalagem.service';
 import { sequenciaService } from '@/features/configuracoes/services/sequencia.service';
+import { formatCurrency, formatQuantity, parseDecimal } from '../../../utils/formatters';
 import {
   AjusteEstoque,
   CreateAjusteEstoqueDTO,
@@ -268,25 +269,10 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
     return emb ? `${emb.descricao} (${emb.unidade_sigla})` : `ID: ${embalagem_id}`;
   };
 
-  const formatQuantidade = (qtd: number | string): string => {
-    const numero = typeof qtd === 'string' ? parseFloat(qtd) : qtd;
-    return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
-  };
-
-  const formatMoeda = (valor: number | string): string => {
-    const numero = typeof valor === 'string' ? parseFloat(valor) : valor;
-    return numero.toLocaleString('pt-BR', { 
-      style: 'currency', 
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  };
-
   const formatDecimal = (valor: number, casasDecimais: number = 3): string => {
     return valor.toLocaleString('pt-BR', { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: casasDecimais 
+      minimumFractionDigits: 3, 
+      maximumFractionDigits: 3 
     });
   };
 
@@ -555,7 +541,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                         </span>
                       </td>
                       <td onClick={() => toggleExpandRow(ajuste.id)}>
-                        {formatMoeda(ajuste.valor)}
+                        {formatCurrency(ajuste.valor)}
                       </td>
                       <td onClick={() => toggleExpandRow(ajuste.id)}>{ajuste.itens?.length || 0}</td>
                       <td>
@@ -618,9 +604,9 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                                     <td>{getEmbalagemNome(item.embalagem_id)}</td>
                                     <td>{getLoteNumero(item.lote_id)}</td>
                                     <td>{getLocalNome(item.local_id)}</td>
-                                    <td>{formatQuantidade(item.quantidade)}</td>
-                                    <td>{formatMoeda(item.valor_unitario)}</td>
-                                    <td>{formatMoeda(item.valor_total)}</td>
+                                    <td>{formatQuantity(item.quantidade)}</td>
+                                    <td>{formatCurrency(item.valor_unitario)}</td>
+                                    <td>{formatCurrency(item.valor_total)}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -701,7 +687,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                   <label>Valor Total</label>
                   <input
                     type="text"
-                    value={formatMoeda(valor)}
+                    value={formatCurrency(valor)}
                     readOnly
                     style={{ background: '#f3f4f6' }}
                   />
@@ -782,7 +768,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                     <label>Valor Total Item</label>
                     <input
                       type="text"
-                      value={formatMoeda(calcularValorTotalItem())}
+                      value={formatCurrency(calcularValorTotalItem())}
                       readOnly
                       style={{ background: '#f3f4f6' }}
                     />
@@ -874,9 +860,9 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                         <tr key={index}>
                           <td>{getItemNome(item.item_id)}</td>
                           <td>{getEmbalagemNome(item.embalagem_id)}</td>
-                          <td>{formatQuantidade(item.quantidade)}</td>
-                          <td>{formatMoeda(item.valor_unitario)}</td>
-                          <td>{formatMoeda(item.valor_total)}</td>
+                          <td>{formatQuantity(item.quantidade)}</td>
+                          <td>{formatCurrency(item.valor_unitario)}</td>
+                          <td>{formatCurrency(item.valor_total)}</td>
                           <td>{getLoteNumero(item.lote_id)}</td>
                           <td>{getLocalNome(item.local_id)}</td>
                           <td>{item.observacao || '-'}</td>

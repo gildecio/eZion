@@ -4,11 +4,13 @@ import { useItens } from '../hooks/useItens';
 import { useLocais } from '../hooks';
 import { useGruposItem } from '../hooks/useGruposItem';
 import type { SaldoFilters } from '../types/saldo';
+import { formatCurrency, formatQuantity, parseDecimal } from '../../../utils/formatters';
 
 export default function SaldosCRUD() {
   const [filters, setFilters] = useState<SaldoFilters>({});
   const [grupoIdFilter, setGrupoIdFilter] = useState<number | undefined>();
-  const { saldos, loading, error, getTotalValue } = useSaldos(filters);
+  const [hasSearched, setHasSearched] = useState(false);
+  const { saldos, loading, error, getTotalValue, fetchSaldos } = useSaldos();
   const { itens } = useItens();
   const { locais } = useLocais();
   const { grupos } = useGruposItem();
@@ -25,9 +27,9 @@ export default function SaldosCRUD() {
     });
   };
 
-  const clearFilters = () => {
-    setFilters({});
-    setGrupoIdFilter(undefined);
+  const handleConsultar = () => {
+    setHasSearched(true);
+    fetchSaldos(filters);
   };
 
   const getItensFiltrados = () => {
@@ -37,19 +39,8 @@ export default function SaldosCRUD() {
     return itens.filter(item => item.grupo_id === grupoIdFilter);
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2 
-    }).format(value);
-  };
-
   const totalValue = getTotalValue();
-  const totalQuantidade = saldos.reduce((acc, s) => acc + s.quantidade, 0);
+  const totalQuantidade = saldos.reduce((acc, s) => acc + parseDecimal(s.quantidade), 0);
 
   return (
     <div className="saldos-crud">
@@ -117,8 +108,8 @@ export default function SaldosCRUD() {
             </select>
           </div>
           <div className="form-group align-end">
-            <button onClick={clearFilters} className="btn-clear">
-              Limpar Filtros
+            <button onClick={handleConsultar} className="btn-consultar">
+              Consultar
             </button>
           </div>
         </div>
@@ -128,6 +119,13 @@ export default function SaldosCRUD() {
       <div className="content">
         {loading ? (
           <div className="loading">Carregando...</div>
+        ) : !hasSearched ? (
+          <div className="empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <p>Selecione os filtros e clique em Consultar</p>
+          </div>
         ) : saldos.length === 0 ? (
           <div className="empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -145,13 +143,12 @@ export default function SaldosCRUD() {
                   <th>Local</th>
                   <th>Lote</th>
                   <th className="text-right">Quantidade</th>
-                  <th>Unidade</th>
                 </tr>
               </thead>
               <tbody>
                 {saldos.map((saldo) => {
                   const valorTotal = saldo.valor_total || (saldo.quantidade * saldo.custo_medio);
-                  const isLowStock = saldo.quantidade < 10;
+                  const isLowStock = parseDecimal(saldo.quantidade) < 10;
                   return (
                     <tr key={saldo.id} className={isLowStock ? 'low-stock' : ''}>
                       <td>
@@ -161,7 +158,9 @@ export default function SaldosCRUD() {
                       <td>{saldo.local_nome || '-'}</td>
                       <td>{saldo.lote_codigo || '-'}</td>
                       <td className="text-right quantidade">
-                        {formatNumber(saldo.quantidade)}
+                        <span className="quantidade-valor">
+                          {formatQuantity(saldo.quantidade)} <span className="unidade-sigla">{saldo.unidade_padrao_sigla || 'UN'}</span>
+                        </span>
                         {isLowStock && (
                           <span className="warning-icon" title="Estoque baixo">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -170,7 +169,6 @@ export default function SaldosCRUD() {
                           </span>
                         )}
                       </td>
-                      <td>{saldo.unidade_padrao_sigla || '-'}</td>
                     </tr>
                   );
                 })}
@@ -181,13 +179,13 @@ export default function SaldosCRUD() {
       </div>
 
       {/* Alerta de Estoque Baixo */}
-      {saldos.some(s => s.quantidade < 10) && (
+      {saldos.some(s => parseDecimal(s.quantidade) < 10) && (
         <div className="warning-alert">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <span>
-            <strong>Atenção:</strong> {saldos.filter(s => s.quantidade < 10).length} item(ns) com estoque baixo (menos de 10 unidades)
+            <strong>Atenção:</strong> {saldos.filter(s => parseDecimal(s.quantidade) < 10).length} item(ns) com estoque baixo (menos de 10 unidades)
           </span>
         </div>
       )}
@@ -325,19 +323,20 @@ export default function SaldosCRUD() {
           box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.1);
         }
 
-        .btn-clear {
+        .btn-consultar {
           padding: 0.625rem 1.25rem;
-          background: #f3f4f6;
-          color: #374151;
-          border: 1px solid #d1d5db;
+          background: #556b2f;
+          color: white;
+          border: 1px solid #556b2f;
           border-radius: 6px;
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s;
         }
 
-        .btn-clear:hover {
-          background: #e5e7eb;
+        .btn-consultar:hover {
+          background: #6b8e3d;
+          border-color: #6b8e3d;
         }
 
         .resumo-grid {
@@ -477,6 +476,19 @@ export default function SaldosCRUD() {
           align-items: center;
           justify-content: flex-end;
           gap: 0.5rem;
+        }
+
+        .quantidade-valor {
+          display: flex;
+          align-items: baseline;
+          gap: 0.35rem;
+        }
+
+        .unidade-sigla {
+          font-size: 0.75rem;
+          color: #6b7280;
+          font-weight: 500;
+          text-transform: uppercase;
         }
 
         td.valor {
