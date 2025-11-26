@@ -1,6 +1,7 @@
 export { useItens } from './useItens';
 export { useUnidades } from './useUnidades';
 export { useEmbalagens } from './useEmbalagens';
+export { useEmbalagensCatalogo } from './useEmbalagensCatalogo';
 export { useGruposItem } from './useGruposItem';
 export { useLocais } from './useLocais';
 export { useLotes } from './useLotes';

@@ -130,6 +130,55 @@ class MovimentacaoRepository(CRUDBase[MovimentacaoEstoque, MovimentacaoCreate, M
             .limit(limit)
             .all()
         )
+    
+    def remove(self, db: Session, *, id: int) -> Optional[MovimentacaoEstoque]:
+        """Remove uma movimentação e recalcula o saldo correspondente"""
+        from app.modules.estoque.models import SaldoEstoque
+        
+        # Buscar a movimentação
+        movimentacao = db.query(self.model).filter(self.model.id == id).first()
+        if not movimentacao:
+            return None
+        
+        # Determinar o delta de quantidade a reverter no saldo
+        # Tipos que AUMENTAM o saldo: ENTRADA, AJUSTE_ENTRADA
+        # Tipos que DIMINUEM o saldo: SAIDA, AJUSTE_SAIDA
+        if movimentacao.tipo in [TipoMovimentacao.ENTRADA, TipoMovimentacao.AJUSTE_ENTRADA]:
+            # Ao excluir uma entrada, diminuímos o saldo
+            quantidade_delta = -movimentacao.quantidade
+        elif movimentacao.tipo in [TipoMovimentacao.SAIDA, TipoMovimentacao.AJUSTE_SAIDA]:
+            # Ao excluir uma saída, aumentamos o saldo
+            quantidade_delta = movimentacao.quantidade
+        else:
+            # Para outros tipos (TRANSFERENCIA, etc), não altera saldo por enquanto
+            quantidade_delta = 0
+        
+        # Buscar ou criar o saldo correspondente
+        if quantidade_delta != 0:
+            saldo = db.query(SaldoEstoque).filter(
+                and_(
+                    SaldoEstoque.item_id == movimentacao.item_id,
+                    SaldoEstoque.local_id == movimentacao.local_id,
+                    SaldoEstoque.lote_id == movimentacao.lote_id
+                )
+            ).first()
+            
+            if saldo:
+                nova_quantidade = saldo.quantidade + quantidade_delta
+                
+                # Se a quantidade ficar zerada, remove o saldo
+                if nova_quantidade == 0:
+                    db.delete(saldo)
+                else:
+                    # Atualiza a quantidade do saldo
+                    saldo.quantidade = nova_quantidade
+                    db.add(saldo)
+        
+        # Excluir a movimentação
+        db.delete(movimentacao)
+        db.commit()
+        
+        return movimentacao
 
 
 movimentacao_repository = MovimentacaoRepository(MovimentacaoEstoque)

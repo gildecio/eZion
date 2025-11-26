@@ -62,6 +62,15 @@ def atualizar_local(
         )
     
     # Se está mudando o código, verifica duplicação
+    # Regras especiais para o local padrão (ID=1)
+    if local_id == 1:
+        # Apenas impedir desativação do local padrão; permitir alteração de código e descrição
+        if local_update.ativo is not None and local_update.ativo is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Não é permitido desativar o local padrão "Não Informado"'
+            )
+
     if local_update.codigo and local_update.codigo != db_local.codigo:
         local_existente = local_repository.get_by_codigo(db, codigo=local_update.codigo)
         if local_existente:
@@ -76,6 +85,8 @@ def atualizar_local(
 @router.delete("/{local_id}", status_code=status.HTTP_204_NO_CONTENT)
 def excluir_local(local_id: int, db: Session = Depends(get_db)):
     """Exclui um local"""
+    from sqlalchemy.exc import IntegrityError, DBAPIError
+    
     db_local = local_repository.get(db, id=local_id)
     if not db_local:
         raise HTTPException(
@@ -83,5 +94,29 @@ def excluir_local(local_id: int, db: Session = Depends(get_db)):
             detail=f"Local com ID {local_id} não encontrado"
         )
     
-    local_repository.remove(db, id=local_id)
-    return None
+    try:
+        local_repository.remove(db, id=local_id)
+        return None
+    except (IntegrityError, DBAPIError) as e:
+        # Captura erros de constraint/trigger do banco
+        error_msg = str(e.orig) if hasattr(e, 'orig') else str(e)
+        
+        # Verificar se é o trigger de local padrão
+        if "prevent_default_local_delete" in error_msg or "local padrão" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Não é permitido excluir o local padrão "Não Informado"'
+            )
+        
+        # Verificar se há itens vinculados
+        if "itens" in error_msg.lower() or "foreign key" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Não é possível excluir este local pois existem itens vinculados a ele"
+            )
+        
+        # Erro genérico de integridade
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Não é possível excluir este local. Verifique se não há registros vinculados"
+        )

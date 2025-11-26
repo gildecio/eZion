@@ -4,6 +4,7 @@ import { ItemService } from '../services/item.service';
 import { LoteService } from '../services/lote.service';
 import { localService } from '../services/local-service';
 import { embalagemService } from '../services/embalagem.service';
+import { saldoService } from '../services/saldo.service';
 import { sequenciaService } from '@/features/configuracoes/services/sequencia.service';
 import { formatCurrency, formatQuantity, parseDecimal } from '../../../utils/formatters';
 import {
@@ -61,6 +62,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
   const [valorUnitarioInput, setValorUnitarioInput] = useState<string>('0');
   const [loteId, setLoteId] = useState<number | null>(null);
   const [localId, setLocalId] = useState<number | null>(null);
+  const [saldoLocal, setSaldoLocal] = useState<number>(0);
   const [observacao, setObservacao] = useState('');
 
   useEffect(() => {
@@ -242,6 +244,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
     setValorUnitarioInput('0');
     setLoteId(null);
     setLocalId(null);
+    setSaldoLocal(0);
     setObservacao('');
   };
 
@@ -249,9 +252,56 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
     setItemId(item_id);
     if (item_id) {
       loadEmbalagensDoItem(item_id);
+      // Recarrega o saldo se já tiver um local selecionado
+      if (localId) {
+        loadSaldoLocal(item_id, localId, loteId);
+      }
     } else {
       setEmbalagensDoItem([]);
       setEmbalagemId(null);
+      setSaldoLocal(0);
+    }
+  };
+
+  const handleLocalChange = (local_id: number | null) => {
+    setLocalId(local_id);
+    if (local_id && itemId) {
+      loadSaldoLocal(itemId, local_id, loteId);
+    } else {
+      setSaldoLocal(0);
+    }
+  };
+
+  const loadSaldoLocal = async (item_id: number, local_id: number, lote_id: number | null) => {
+    try {
+      const saldos = await saldoService.getAll({
+        item_id,
+        local_id,
+        lote_id: lote_id || undefined
+      });
+      
+      if (saldos.length > 0) {
+        // Soma todos os saldos retornados de forma robusta evitando NaN
+        const totalSaldo = saldos.reduce((sum, s) => {
+          let raw = (s as any).quantidade;
+          let qty: number;
+          if (typeof raw === 'string') {
+            // Converte vírgula para ponto e remove espaços
+            const cleaned = raw.trim().replace(',', '.');
+            qty = parseFloat(cleaned);
+          } else {
+            qty = Number(raw);
+          }
+          if (isNaN(qty)) qty = 0;
+          return sum + qty;
+        }, 0);
+        setSaldoLocal(isNaN(totalSaldo) ? 0 : totalSaldo);
+      } else {
+        setSaldoLocal(0);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar saldo:', error);
+      setSaldoLocal(0);
     }
   };
 
@@ -326,6 +376,17 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
   const addItem = () => {
     if (!itemId || quantidade <= 0 || valorUnitario < 0) {
       alert('Preencha item, quantidade e valor unitário corretamente');
+      return;
+    }
+
+    if (!localId) {
+      alert('O campo Local é obrigatório');
+      return;
+    }
+
+    // Validação para ajustes de saída
+    if (tipo === 'S' && quantidade > saldoLocal) {
+      alert(`Quantidade insuficiente em estoque!\n\nSaldo disponível: ${formatQuantity(saldoLocal)}\nQuantidade solicitada: ${formatQuantity(quantidade)}\n\nNão é possível dar saída de mais produtos do que o disponível no local.`);
       return;
     }
 
@@ -441,9 +502,37 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
       await loadData();
       setDeleteModalOpen(false);
       setDeletingId(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao excluir ajuste:', error);
-      alert('Erro ao excluir ajuste');
+      // Compatível com ApiClient (fetch) e Axios
+      const status: number | undefined = error?.status ?? error?.response?.status;
+      const detail: string | undefined = error?.message 
+        ?? error?.response?.data?.detail 
+        ?? error?.response?.data?.message;
+
+      let message = 'Erro ao excluir ajuste.';
+      if (detail) {
+        message = `Erro ao excluir ajuste: ${detail}`;
+      } else if (status === 404) {
+        message = 'Ajuste não encontrado. Talvez já tenha sido removido.';
+      } else if (status === 400) {
+        message = 'Requisição inválida ao excluir o ajuste.';
+      } else if (status === 409) {
+        message = 'Não é possível excluir: ajuste já utilizado em movimentações ou consolidado.';
+      } else if (status === 500) {
+        message = 'Falha interna do servidor ao excluir. Tente novamente mais tarde.';
+      } else if (error?.message) {
+        message = `Erro ao excluir ajuste: ${error.message}`;
+      }
+      // Mesmo em erro, garantir fechamento para evitar estados inconsistentes se o backend já excluiu
+      setDeleteModalOpen(false);
+      setDeletingId(null);
+      await loadData();
+      // Se após recarregar, o ajuste não está mais na lista, silencia o erro pois a ação foi efetivada
+      const ajusteAindaExiste = ajustes.some(a => a.id === deletingId);
+      if (ajusteAindaExiste) {
+        alert(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -745,6 +834,32 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                   </div>
 
                   <div className="form-group">
+                    <label>Local <span className="required">*</span></label>
+                    <select
+                      value={localId || ''}
+                      onChange={(e) => handleLocalChange(Number(e.target.value) || null)}
+                    >
+                      <option value="">Selecione...</option>
+                      {locais.map((local) => (
+                        <option key={local.id} value={local.id}>
+                          {local.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Saldo</label>
+                    <input
+                      type="text"
+                      value={formatQuantity(saldoLocal)}
+                      readOnly
+                      style={{ background: '#f3f4f6', color: saldoLocal > 0 ? '#059669' : '#6b7280', fontWeight: saldoLocal > 0 ? 600 : 400 }}
+                      title={`Saldo disponível no local${itemId && localId ? '' : ' (selecione item e local)'}`}
+                    />
+                  </div>
+
+                  <div className="form-group">
                     <label>Quantidade <span className="required">*</span></label>
                     <input
                       type="text"
@@ -787,27 +902,19 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                     <label>Lote</label>
                     <select
                       value={loteId || ''}
-                      onChange={(e) => setLoteId(Number(e.target.value) || null)}
+                      onChange={(e) => {
+                        const newLoteId = Number(e.target.value) || null;
+                        setLoteId(newLoteId);
+                        // Recarrega saldo quando lote muda
+                        if (itemId && localId) {
+                          loadSaldoLocal(itemId, localId, newLoteId);
+                        }
+                      }}
                     >
                       <option value="">Nenhum</option>
                       {lotes.map((lote) => (
                         <option key={lote.id} value={lote.id}>
                           {lote.codigo}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Local</label>
-                    <select
-                      value={localId || ''}
-                      onChange={(e) => setLocalId(Number(e.target.value) || null)}
-                    >
-                      <option value="">Nenhum</option>
-                      {locais.map((local) => (
-                        <option key={local.id} value={local.id}>
-                          {local.nome}
                         </option>
                       ))}
                     </select>

@@ -32,6 +32,9 @@ class DecimalCommaMiddleware(BaseHTTPMiddleware):
             
             # Converte bytes para string, substitui . por , em números decimais
             content = body.decode()
+            # Só processa se houver conteúdo e não for 204 No Content
+            if response.status_code == 204 or not content.strip():
+                return response
             # Substitui padrões como "123.45" por "123,45" mas preserva URLs, datas, etc.
             # Pattern: número seguido de ponto e mais números entre aspas
             content = re.sub(r'":(\d+)\.(\d+)"', r'":\1,\2"', content)

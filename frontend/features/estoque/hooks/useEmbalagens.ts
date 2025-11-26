@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { embalagemService } from '../services';
+import { itemEmbalagensService } from '../services';
 import type { 
   EmbalagemItemWithUnidade, 
   CreateEmbalagemItemDTO, 
@@ -20,7 +20,7 @@ export function useEmbalagens(itemId?: number) {
     try {
       setLoading(true);
       setError(null);
-      const data = await embalagemService.getByItem(itemId);
+      const data = await itemEmbalagensService.list(itemId);
       setEmbalagens(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar embalagens');
@@ -36,7 +36,12 @@ export function useEmbalagens(itemId?: number) {
   const create = async (data: CreateEmbalagemItemDTO): Promise<boolean> => {
     try {
       setError(null);
-      await embalagemService.create(data);
+      await itemEmbalagensService.createFromCatalog(data.item_id, {
+        catalogo_embalagem_id: data.unidade_id, // placeholder (will be updated in component refactor)
+        fator_conversao: data.fator_conversao,
+        codigo_barras: data.codigo_barras ?? undefined,
+        padrao: data.padrao,
+      });
       await loadEmbalagens();
       return true;
     } catch (err) {
@@ -48,7 +53,13 @@ export function useEmbalagens(itemId?: number) {
   const update = async (id: number, data: UpdateEmbalagemItemDTO): Promise<boolean> => {
     try {
       setError(null);
-      await embalagemService.update(id, data);
+      // Update only allowed fields in association
+      const itemId = data.item_id;
+      await itemEmbalagensService.update(itemId, id, {
+        fator_conversao: data.fator_conversao,
+        codigo_barras: data.codigo_barras ?? undefined,
+        padrao: data.padrao,
+      });
       await loadEmbalagens();
       return true;
     } catch (err) {
@@ -60,7 +71,9 @@ export function useEmbalagens(itemId?: number) {
   const remove = async (id: number): Promise<boolean> => {
     try {
       setError(null);
-      await embalagemService.delete(id);
+      // We need selected itemId to delete association; skip if undefined
+      if (!itemId) throw new Error('Item não selecionado');
+      await itemEmbalagensService.delete(itemId, id);
       await loadEmbalagens();
       return true;
     } catch (err) {

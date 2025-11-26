@@ -51,15 +51,24 @@ class ApiClient {
           message: response.statusText || 'Erro na requisição',
           status: response.status,
         };
-        
+
         try {
           const errorData = await response.json();
-          error.message = errorData.message || error.message;
-          error.errors = errorData.errors;
+          // Mapeia formatos comuns (FastAPI usa 'detail')
+          if (errorData) {
+            if (errorData.detail && typeof errorData.detail === 'string') {
+              error.message = errorData.detail;
+            } else if (errorData.message) {
+              error.message = errorData.message;
+            }
+            if (errorData.errors) {
+              error.errors = errorData.errors;
+            }
+          }
         } catch {
           // Response não é JSON
         }
-        
+
         throw error;
       }
 

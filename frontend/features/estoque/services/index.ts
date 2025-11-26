@@ -1,6 +1,8 @@
 export { itemService } from './item.service';
 export { unidadeService } from './unidade.service';
 export { embalagemService } from './embalagem.service';
+export { embalagemCatalogoService } from './embalagem-catalogo.service';
+export { itemEmbalagensService } from './item-embalagens.service';
 export { grupoItemService } from './grupo-item.service';
 export { loteService } from './lote.service';
 export { movimentacaoService } from './movimentacao.service';

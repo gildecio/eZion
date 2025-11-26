@@ -15,17 +15,17 @@ class GrupoItemService {
   }
 
   async getTree(): Promise<GrupoItemTree[]> {
-    const response = await apiClient.get<GrupoItemTree[]>(`/estoque/grupostree`);
+    const response = await apiClient.get<GrupoItemTree[]>(`/estoque/grupos/tree`);
     return response.data;
   }
 
   async getLeaves(): Promise<GrupoItem[]> {
-    const response = await apiClient.get<GrupoItem[]>(`/estoque/gruposleaves`);
+    const response = await apiClient.get<GrupoItem[]>(`/estoque/grupos/leaves`);
     return response.data;
   }
 
   async getById(id: number): Promise<GrupoItemWithItems> {
-    const response = await apiClient.get<GrupoItemWithItems>(`/estoque/grupos${id}`);
+    const response = await apiClient.get<GrupoItemWithItems>(`/estoque/grupos/${id}`);
     return response.data;
   }
 
@@ -35,12 +35,12 @@ class GrupoItemService {
   }
 
   async update(id: number, data: UpdateGrupoItemDTO): Promise<GrupoItem> {
-    const response = await apiClient.put<GrupoItem>(`/estoque/grupos${id}`, data);
+    const response = await apiClient.put<GrupoItem>(`/estoque/grupos/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete<void>(`/estoque/grupos${id}`);
+    await apiClient.delete<void>(`/estoque/grupos/${id}`);
   }
 }
 

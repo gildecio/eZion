@@ -87,8 +87,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """Delete a record"""
         obj = db.query(self.model).filter(self.model.id == id).first()
         if obj:
-            db.delete(obj)
-            db.commit()
+            try:
+                db.delete(obj)
+                db.commit()
+            except IntegrityError:
+                db.rollback()
+                raise
         return obj
 
     def count(self, db: Session, filters: Optional[Dict[str, Any]] = None) -> int:

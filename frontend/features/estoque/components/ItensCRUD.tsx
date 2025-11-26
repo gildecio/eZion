@@ -6,6 +6,8 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import type { Item, CreateItemDTO, UpdateItemDTO, TipoItem } from '../types';
 import { grupoItemService } from '../../../src/features/estoque/services/grupo-item.service';
 import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
+import { itemEmbalagensService } from '../services';
+import type { CreateItemEmbalagemFromCatalogDTO } from '../types/embalagem';
 
 export default function ItensCRUD() {
   const [filtroGrupo, setFiltroGrupo] = useState<number | null>(null);
@@ -50,18 +52,32 @@ export default function ItensCRUD() {
     setItemToDelete(item);
   };
 
-  const handleSubmit = async (data: CreateItemDTO | UpdateItemDTO) => {
+  const handleSubmit = async (data: CreateItemDTO | UpdateItemDTO, pendingEmbalagens?: CreateItemEmbalagemFromCatalogDTO[]) => {
     setIsSubmitting(true);
     try {
       if (selectedItem) {
         await update(selectedItem.id, data as UpdateItemDTO);
       } else {
-        await create(data as CreateItemDTO);
+        // Criar o item
+        const newItem = await create(data as CreateItemDTO);
+        
+        // Se houver embalagens pendentes, salvá-las agora
+        if (pendingEmbalagens && pendingEmbalagens.length > 0 && newItem) {
+          for (const embalagem of pendingEmbalagens) {
+            try {
+              await itemEmbalagensService.createFromCatalog(newItem.id, embalagem);
+            } catch (embError) {
+              console.error('Erro ao salvar embalagem:', embError);
+              // Continua salvando as outras embalagens mesmo se uma falhar
+            }
+          }
+        }
       }
       setShowForm(false);
       setSelectedItem(undefined);
     } catch (error) {
       console.error('Erro ao salvar item:', error);
+      throw error; // Re-throw para que o ItemForm possa tratar o erro
     } finally {
       setIsSubmitting(false);
     }

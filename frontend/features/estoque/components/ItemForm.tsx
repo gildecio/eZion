@@ -5,10 +5,12 @@ import type { GrupoItem } from '../../../src/features/estoque/types/grupo-item';
 import { useUnidades } from '../hooks';
 import { localService } from '../services/local-service';
 import type { Local } from '../types/local';
+import ItemEmbalagensTab from './ItemEmbalagensTab';
+import type { CreateItemEmbalagemFromCatalogDTO } from '../types/embalagem';
 
 interface ItemFormProps {
   item?: Item;
-  onSubmit: (data: CreateItemDTO | UpdateItemDTO) => Promise<void>;
+  onSubmit: (data: CreateItemDTO | UpdateItemDTO, pendingEmbalagens?: CreateItemEmbalagemFromCatalogDTO[]) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -23,7 +25,10 @@ const TIPOS_ITEM: { value: TipoItem; label: string }[] = [
   { value: "Outros" as TipoItem, label: "Outros" },
 ];
 
+type TabType = 'item' | 'embalagens';
+
 export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFormProps) {
+  const [activeTab, setActiveTab] = useState<TabType>('item');
   const [gruposLeaves, setGruposLeaves] = useState<GrupoItem[]>([]);
   const [loadingGrupos, setLoadingGrupos] = useState(true);
   const [locais, setLocais] = useState<Local[]>([]);
@@ -39,6 +44,9 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
     local_padrao_entrada_id: item?.local_padrao_entrada_id || 0,
     local_padrao_saida_id: item?.local_padrao_saida_id || 0,
   });
+
+  // Estado para embalagens pendentes (antes de salvar o item)
+  const [pendingEmbalagens, setPendingEmbalagens] = useState<CreateItemEmbalagemFromCatalogDTO[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -96,201 +104,268 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
     if (!validate()) return;
 
     try {
-      await onSubmit(formData);
+      // Salvar o item e passar as embalagens pendentes para o componente pai
+      await onSubmit(formData, pendingEmbalagens.length > 0 ? pendingEmbalagens : undefined);
     } catch (error) {
       console.error('Erro ao salvar item:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Código *
-          <input
-            type="text"
-            value={formData.codigo}
-            onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-            style={{
-              ...styles.input,
-              ...(errors.codigo ? styles.inputError : {})
-            }}
-            placeholder="Digite o código do item"
-            maxLength={50}
-          />
-        </label>
-        {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Descrição *
-          <input
-            type="text"
-            value={formData.descricao}
-            onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-            style={{
-              ...styles.input,
-              ...(errors.descricao ? styles.inputError : {})
-            }}
-            placeholder="Digite a descrição do item"
-            maxLength={255}
-          />
-        </label>
-        {errors.descricao && <span style={styles.errorText}>{errors.descricao}</span>}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Tipo *
-          <select
-            value={formData.tipo}
-            onChange={(e) => setFormData({ ...formData, tipo: e.target.value as TipoItem })}
-            style={{
-              ...styles.select,
-              ...(errors.tipo ? styles.inputError : {})
-            }}
-          >
-            {TIPOS_ITEM.map((tipo) => (
-              <option key={tipo.value} value={tipo.value}>
-                {tipo.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {errors.tipo && <span style={styles.errorText}>{errors.tipo}</span>}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Grupo
-          <select
-            value={formData.grupo_id || ''}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              grupo_id: e.target.value ? Number(e.target.value) : null 
-            })}
-            style={styles.select}
-            disabled={loadingGrupos}
-          >
-            <option value="">Nenhum grupo</option>
-            {gruposLeaves.map((grupo) => (
-              <option key={grupo.id} value={grupo.id}>
-                {grupo.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        {loadingGrupos && (
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            Carregando grupos...
-          </span>
-        )}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Unidade Padrão
-          <select
-            value={formData.unidade_padrao_id || ''}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              unidade_padrao_id: e.target.value ? Number(e.target.value) : null 
-            })}
-            style={styles.select}
-            disabled={loadingUnidades}
-          >
-            <option value="">Nenhuma unidade</option>
-            {unidades.map((unidade) => (
-              <option key={unidade.id} value={unidade.id}>
-                {unidade.sigla} - {unidade.descricao}
-              </option>
-            ))}
-          </select>
-        </label>
-        {loadingUnidades && (
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            Carregando unidades...
-          </span>
-        )}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Local Padrão de Entrada
-          <select
-            value={formData.local_padrao_entrada_id}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              local_padrao_entrada_id: Number(e.target.value)
-            })}
-            style={styles.select}
-            disabled={loadingLocais}
-          >
-            <option value={0}>Local Padrão (0)</option>
-            {locais.map((local) => (
-              <option key={local.id} value={local.id}>
-                {local.codigo} - {local.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        {loadingLocais && (
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            Carregando locais...
-          </span>
-        )}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label}>
-          Local Padrão de Saída
-          <select
-            value={formData.local_padrao_saida_id}
-            onChange={(e) => setFormData({ 
-              ...formData, 
-              local_padrao_saida_id: Number(e.target.value)
-            })}
-            style={styles.select}
-            disabled={loadingLocais}
-          >
-            <option value={0}>Local Padrão (0)</option>
-            {locais.map((local) => (
-              <option key={local.id} value={local.id}>
-                {local.codigo} - {local.nome}
-              </option>
-            ))}
-          </select>
-        </label>
-        {loadingLocais && (
-          <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            Carregando locais...
-          </span>
-        )}
-      </div>
-
-      <div style={styles.formActions}>
+    <div style={styles.container}>
+      {/* Tabs */}
+      <div style={styles.tabs}>
         <button
           type="button"
-          onClick={onCancel}
-          style={styles.cancelButton}
-          disabled={isLoading}
+          onClick={() => setActiveTab('item')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'item' ? styles.activeTab : {}),
+          }}
         >
-          Cancelar
+          Item
         </button>
         <button
-          type="submit"
-          style={styles.submitButton}
-          disabled={isLoading}
+          type="button"
+          onClick={() => setActiveTab('embalagens')}
+          style={{
+            ...styles.tab,
+            ...(activeTab === 'embalagens' ? styles.activeTab : {}),
+          }}
         >
-          {isLoading ? 'Salvando...' : item ? 'Atualizar' : 'Criar'}
+          Embalagens {pendingEmbalagens.length > 0 && `(${pendingEmbalagens.length})`}
         </button>
       </div>
-    </form>
+
+      {/* Tab Content */}
+      {activeTab === 'item' ? (
+        <form onSubmit={handleSubmit} style={styles.form} onKeyDown={(e) => {
+          // Prevent form submission on Enter in the item tab
+          if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+            e.preventDefault();
+          }
+        }}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Código *
+              <input
+                type="text"
+                value={formData.codigo}
+                onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                style={{
+                  ...styles.input,
+                  ...(errors.codigo ? styles.inputError : {})
+                }}
+                placeholder="Digite o código do item"
+                maxLength={50}
+              />
+            </label>
+            {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Descrição *
+              <input
+                type="text"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                style={{
+                  ...styles.input,
+                  ...(errors.descricao ? styles.inputError : {})
+                }}
+                placeholder="Digite a descrição do item"
+                maxLength={255}
+              />
+            </label>
+            {errors.descricao && <span style={styles.errorText}>{errors.descricao}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Tipo *
+              <select
+                value={formData.tipo}
+                onChange={(e) => setFormData({ ...formData, tipo: e.target.value as TipoItem })}
+                style={{
+                  ...styles.select,
+                  ...(errors.tipo ? styles.inputError : {})
+                }}
+              >
+                {TIPOS_ITEM.map((tipo) => (
+                  <option key={tipo.value} value={tipo.value}>
+                    {tipo.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {errors.tipo && <span style={styles.errorText}>{errors.tipo}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Grupo
+              <select
+                value={formData.grupo_id || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  grupo_id: e.target.value ? Number(e.target.value) : null 
+                })}
+                style={styles.select}
+                disabled={loadingGrupos}
+              >
+                <option value="">Nenhum grupo</option>
+                {gruposLeaves.map((grupo) => (
+                  <option key={grupo.id} value={grupo.id}>
+                    {grupo.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {loadingGrupos && (
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Carregando grupos...
+              </span>
+            )}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Unidade Padrão
+              <select
+                value={formData.unidade_padrao_id || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  unidade_padrao_id: e.target.value ? Number(e.target.value) : null 
+                })}
+                style={styles.select}
+                disabled={loadingUnidades}
+              >
+                <option value="">Nenhuma unidade</option>
+                {unidades.map((unidade) => (
+                  <option key={unidade.id} value={unidade.id}>
+                    {unidade.sigla} - {unidade.descricao}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {loadingUnidades && (
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Carregando unidades...
+              </span>
+            )}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Local Padrão de Entrada
+              <select
+                value={formData.local_padrao_entrada_id}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  local_padrao_entrada_id: Number(e.target.value)
+                })}
+                style={styles.select}
+                disabled={loadingLocais}
+              >
+                <option value={0}>Local Padrão (0)</option>
+                {locais.map((local) => (
+                  <option key={local.id} value={local.id}>
+                    {local.codigo} - {local.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {loadingLocais && (
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Carregando locais...
+              </span>
+            )}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Local Padrão de Saída
+              <select
+                value={formData.local_padrao_saida_id}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  local_padrao_saida_id: Number(e.target.value)
+                })}
+                style={styles.select}
+                disabled={loadingLocais}
+              >
+                <option value={0}>Local Padrão (0)</option>
+                {locais.map((local) => (
+                  <option key={local.id} value={local.id}>
+                    {local.codigo} - {local.nome}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {loadingLocais && (
+              <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                Carregando locais...
+              </span>
+            )}
+          </div>
+
+          <div style={styles.formActions}>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={styles.cancelButton}
+              disabled={isLoading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              style={styles.submitButton}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Salvando...' : item ? 'Atualizar' : 'Criar'}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <ItemEmbalagensTab 
+          item={item} 
+          unidadePadraoId={formData.unidade_padrao_id}
+          pendingEmbalagens={pendingEmbalagens}
+          onPendingEmbalagensChange={setPendingEmbalagens}
+        />
+      )}
+    </div>
   );
 }
 
 const styles = {
+  container: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+  },
+  tabs: {
+    display: 'flex',
+    borderBottom: '1px solid #e5e7eb',
+    marginBottom: '1rem',
+  },
+  tab: {
+    padding: '0.75rem 1.5rem',
+    border: 'none',
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    fontWeight: '500' as const,
+    color: '#6b7280',
+    borderBottom: '2px solid transparent',
+    transition: 'all 0.2s',
+    outline: 'none',
+  },
+  activeTab: {
+    color: '#3b82f6',
+    borderBottomColor: '#3b82f6',
+  },
   form: {
     display: 'flex',
     flexDirection: 'column' as const,

@@ -209,6 +209,91 @@ class AjusteEstoqueRepository(CRUDBase[AjusteEstoque, AjusteEstoqueCreate, Ajust
             logger.error(f"Erro ao atualizar ajuste: {str(e)}", exc_info=True)
             raise
 
+    def remove(self, db: Session, *, id: int) -> Optional[AjusteEstoque]:
+        """Remove um ajuste de estoque e limpa movimentações vinculadas ao seu número/série.
+        Evita erros de integridade e mantém consistência ao excluir o documento.
+        """
+        from app.modules.estoque.models.movimentacao import MovimentacaoEstoque
+        from app.modules.estoque.repositories.movimentacao import movimentacao_repository
+
+        # Buscar ajuste
+        ajuste = db.query(AjusteEstoque).filter(AjusteEstoque.id == id).first()
+        if not ajuste:
+            return None
+
+        try:
+            # Buscar movimentações associadas
+            movimentacoes = db.query(MovimentacaoEstoque).filter(
+                MovimentacaoEstoque.numero == ajuste.numero,
+                MovimentacaoEstoque.serie == ajuste.serie,
+                MovimentacaoEstoque.tipo.in_(["AJUSTE_ENTRADA", "AJUSTE_SAIDA"])
+            ).all()
+
+            # Excluir cada movimentação usando o repository (para recalcular saldo)
+            for mov in movimentacoes:
+                # Não commitamos aqui pois o remove do repository já faz commit
+                # Vamos fazer manualmente sem commit
+                db.expunge(mov)  # Remover do tracking
+                
+            # Fazer a exclusão manual com recálculo de saldo
+            for mov in movimentacoes:
+                mov_attached = db.query(MovimentacaoEstoque).filter(MovimentacaoEstoque.id == mov.id).first()
+                if mov_attached:
+                    # Usar o método remove do repository sem commit automático
+                    # Precisamos fazer isso de forma diferente
+                    pass
+
+            # Por enquanto, vamos usar a abordagem direta mas adicionar recálculo de saldo
+            # Excluir movimentações associadas (por numero/serie/tipo)
+            movimentacoes = db.query(MovimentacaoEstoque).filter(
+                MovimentacaoEstoque.numero == ajuste.numero,
+                MovimentacaoEstoque.serie == ajuste.serie,
+                MovimentacaoEstoque.tipo.in_(["AJUSTE_ENTRADA", "AJUSTE_SAIDA"])
+            ).all()
+            
+            # Para cada movimentação, recalcular o saldo antes de excluir
+            from app.modules.estoque.models import SaldoEstoque
+            from sqlalchemy import and_
+            from app.modules.estoque.models.movimentacao import TipoMovimentacao
+            
+            for movimentacao in movimentacoes:
+                # Determinar o delta de quantidade a reverter no saldo
+                if movimentacao.tipo in [TipoMovimentacao.ENTRADA, TipoMovimentacao.AJUSTE_ENTRADA]:
+                    quantidade_delta = -movimentacao.quantidade
+                elif movimentacao.tipo in [TipoMovimentacao.SAIDA, TipoMovimentacao.AJUSTE_SAIDA]:
+                    quantidade_delta = movimentacao.quantidade
+                else:
+                    quantidade_delta = 0
+                
+                # Recalcular saldo
+                if quantidade_delta != 0:
+                    saldo = db.query(SaldoEstoque).filter(
+                        and_(
+                            SaldoEstoque.item_id == movimentacao.item_id,
+                            SaldoEstoque.local_id == movimentacao.local_id,
+                            SaldoEstoque.lote_id == movimentacao.lote_id
+                        )
+                    ).first()
+                    
+                    if saldo:
+                        nova_quantidade = saldo.quantidade + quantidade_delta
+                        
+                        if nova_quantidade == 0:
+                            db.delete(saldo)
+                        else:
+                            saldo.quantidade = nova_quantidade
+                
+                # Excluir a movimentação
+                db.delete(movimentacao)
+
+            # Excluir o ajuste (itens serão removidos por FK ondelete CASCADE)
+            db.delete(ajuste)
+            db.commit()
+            return ajuste
+        except Exception:
+            db.rollback()
+            raise
+
 
 class AjusteEstoqueItemRepository(CRUDBase[AjusteEstoqueItem, dict, dict]):
     def __init__(self):

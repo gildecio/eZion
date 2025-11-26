@@ -42,3 +42,18 @@ class EmbalagemItemWithUnidade(EmbalagemItem):
 
     class Config:
         from_attributes = True
+
+
+class EmbalagemItemFromCatalogCreate(BaseModel):
+    """Criação de associação usando uma embalagem do catálogo"""
+    catalogo_embalagem_id: int = Field(..., description="ID da embalagem no catálogo")
+    fator_conversao: Decimal = Field(..., gt=0, description="Fator de conversão para unidade padrão")
+    codigo_barras: Optional[str] = Field(None, max_length=50)
+    padrao: bool = Field(False)
+
+
+class EmbalagemItemAssociationUpdate(BaseModel):
+    """Atualização de associação item-embalagem (campos mutáveis)."""
+    fator_conversao: Optional[Decimal] = Field(None, gt=0)
+    codigo_barras: Optional[str] = Field(None, max_length=50)
+    padrao: Optional[bool] = None

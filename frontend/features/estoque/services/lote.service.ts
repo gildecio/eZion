@@ -9,7 +9,7 @@ export class LoteService {
   }
 
   async getById(id: number): Promise<Lote> {
-    const response = await apiClient.get<Lote>(`/estoque/lotes${id}`);
+    const response = await apiClient.get<Lote>(`/estoque/lotes/${id}`);
     return response.data;
   }
 
@@ -19,12 +19,12 @@ export class LoteService {
   }
 
   async update(id: number, data: UpdateLoteDTO): Promise<Lote> {
-    const response = await apiClient.put<Lote>(`/estoque/lotes${id}`, data);
+    const response = await apiClient.put<Lote>(`/estoque/lotes/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/estoque/lotes${id}`);
+    await apiClient.delete(`/estoque/lotes/${id}`);
   }
 }
 

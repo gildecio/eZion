@@ -59,21 +59,39 @@ export function formatCurrency(value: number | string): string {
  */
 export function formatQuantity(value: number | string): string {
   const numValue = parseDecimal(value);
+  const safe = Number.isFinite(numValue) ? numValue : 0;
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 3,
     maximumFractionDigits: 3,
-  }).format(numValue);
+  }).format(safe);
 }
 
 /**
  * Converte string com vírgula (formato brasileiro) para número
  */
 export function parseDecimal(value: any): number {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    return parseFloat(value.replace(',', '.'));
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
   }
-  return 0;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return 0;
+    // Remove separadores de milhar comuns antes de converter
+    // Ex: "1.234,56" -> "1234,56" -> "1234.56"
+    const normalized = trimmed
+      .replace(/\s+/g, '')
+      .replace(/\.(?=\d{3}(\D|$))/g, '') // remove pontos que antecedem grupos de 3 dígitos
+      .replace(/,/g, '.');
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  if (value == null) return 0;
+  try {
+    const asNumber = Number(value);
+    return Number.isFinite(asNumber) ? asNumber : 0;
+  } catch {
+    return 0;
+  }
 }
 
 /**

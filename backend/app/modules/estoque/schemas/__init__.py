@@ -7,6 +7,7 @@ from .grupo_item import (
     GrupoItemWithItems
 )
 from .unidade import Unidade, UnidadeCreate, UnidadeUpdate
+from .embalagem import Embalagem, EmbalagemCreate, EmbalagemUpdate
 from .embalagem_item import (
     EmbalagemItem,
     EmbalagemItemCreate,
@@ -38,6 +39,7 @@ __all__ = [
     "Unidade",
     "UnidadeCreate",
     "UnidadeUpdate",
+    "Embalagem", "EmbalagemCreate", "EmbalagemUpdate",
     "EmbalagemItem",
     "EmbalagemItemCreate",
     "EmbalagemItemUpdate",

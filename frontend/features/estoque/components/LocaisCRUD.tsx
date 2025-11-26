@@ -85,7 +85,11 @@ export default function LocaisCRUD() {
       await loadLocais();
       setDeletingLocal(null);
     } catch (err: any) {
-      setError(err.message || 'Erro ao excluir local');
+      // Mensagens mais amigáveis para erros de exclusão
+      const msg = err?.message || 'Erro ao excluir local';
+      setError(msg);
+      // Fecha o modal mesmo em erro para evitar bloqueio de interface
+      setDeletingLocal(null);
     } finally {
       setLoading(false);
     }
