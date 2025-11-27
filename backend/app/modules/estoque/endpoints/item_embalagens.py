@@ -91,17 +91,18 @@ def criar_from_catalogo(item_id: int, data: EmbalagemItemFromCatalogCreate, db: 
             if emb.padrao:
                 embalagem_item_repository.update(db, db_obj=emb, obj_in={"padrao": False})
 
-    created = embalagem_item_repository.create(
-        db,
-        obj_in={
-            "item_id": item_id,
-            "unidade_id": catalogo.unidade_id,
-            "descricao": catalogo.descricao,
-            "fator_conversao": catalogo.fator_conversao,  # Usa o fator do catálogo
-            "codigo_barras": data.codigo_barras,
-            "padrao": data.padrao,
-        },
+    # Criar objeto usando o schema correto
+    from app.modules.estoque.schemas.embalagem_item import EmbalagemItemCreate
+    embalagem_data = EmbalagemItemCreate(
+        item_id=item_id,
+        unidade_id=catalogo.unidade_id,
+        descricao=catalogo.descricao,
+        fator_conversao=catalogo.fator_conversao,  # Usa o fator do catálogo
+        codigo_barras=data.codigo_barras,
+        padrao=data.padrao,
     )
+    
+    created = embalagem_item_repository.create(db, obj_in=embalagem_data)
     return created
 
 
