@@ -31,13 +31,11 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
   // Form state for adding/editing
   const [formData, setFormData] = useState({
     catalogo_embalagem_id: 0,
-    fator_conversao: 1,
     codigo_barras: '',
     padrao: false,
   });
 
   const [editFormData, setEditFormData] = useState({
-    fator_conversao: 1,
     codigo_barras: '',
     padrao: false,
   });
@@ -102,7 +100,6 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
 
       const newEmbalagem: CreateItemEmbalagemFromCatalogDTO = {
         catalogo_embalagem_id: formData.catalogo_embalagem_id,
-        fator_conversao: formData.fator_conversao,
         codigo_barras: formData.codigo_barras || undefined,
         padrao: formData.padrao,
       };
@@ -116,7 +113,6 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
       
       setFormData({
         catalogo_embalagem_id: 0,
-        fator_conversao: 1,
         codigo_barras: '',
         padrao: false,
       });
@@ -130,14 +126,12 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
       setLoading(true);
       await itemEmbalagensService.createFromCatalog(item!.id, {
         catalogo_embalagem_id: formData.catalogo_embalagem_id,
-        fator_conversao: formData.fator_conversao,
         codigo_barras: formData.codigo_barras || undefined,
         padrao: formData.padrao,
       });
       await loadEmbalagens();
       setFormData({
         catalogo_embalagem_id: 0,
-        fator_conversao: 1,
         codigo_barras: '',
         padrao: false,
       });
@@ -155,7 +149,6 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
     try {
       setLoading(true);
       await itemEmbalagensService.update(item.id, embalagemId, {
-        fator_conversao: editFormData.fator_conversao,
         codigo_barras: editFormData.codigo_barras || undefined,
         padrao: editFormData.padrao,
       });
@@ -246,9 +239,6 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
   const startEdit = (embalagem: EmbalagemItem) => {
     setEditingId(embalagem.unidade_id);
     setEditFormData({
-      fator_conversao: typeof embalagem.fator_conversao === 'string' 
-        ? parseFloat(embalagem.fator_conversao) 
-        : embalagem.fator_conversao,
       codigo_barras: embalagem.codigo_barras || '',
       padrao: embalagem.padrao,
     });
@@ -300,25 +290,10 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
                   <option value={0}>Selecione...</option>
                   {catalogo.map((emb) => (
                     <option key={emb.id} value={emb.id}>
-                      {emb.descricao} ({getUnidadeSigla(emb.unidade_id)})
+                      {emb.descricao} ({getUnidadeSigla(emb.unidade_id)}) - Fator: {typeof emb.fator_conversao === 'string' ? emb.fator_conversao : emb.fator_conversao}
                     </option>
                   ))}
                 </select>
-              </label>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>
-                Fator de Conversão *
-                <input
-                  type="number"
-                  step="0.0001"
-                  min="0.0001"
-                  value={formData.fator_conversao}
-                  onChange={(e) => setFormData({ ...formData, fator_conversao: Number(e.target.value) })}
-                  style={styles.input}
-                  required
-                />
               </label>
             </div>
 
@@ -380,7 +355,7 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
                 id: p.catalogo_embalagem_id,
                 descricao: catalogoEmb?.descricao || 'Embalagem',
                 unidade_id: catalogoEmb?.unidade_id || 0,
-                fator_conversao: p.fator_conversao,
+                fator_conversao: catalogoEmb?.fator_conversao || 1,
                 codigo_barras: p.codigo_barras || null,
                 padrao: p.padrao || false,
               };

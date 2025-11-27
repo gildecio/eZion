@@ -10,7 +10,7 @@ export default function EmbalagensCRUD() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EmbalagemCatalogo | null>(null);
   const [deleting, setDeleting] = useState<EmbalagemCatalogo | null>(null);
-  const [formData, setFormData] = useState<CreateEmbalagemCatalogoDTO>({ descricao: '', unidade_id: 0, ativo: true });
+  const [formData, setFormData] = useState<CreateEmbalagemCatalogoDTO>({ descricao: '', unidade_id: 0, fator_conversao: 1, ativo: true });
 
   const filtered = embalagens.filter(e => {
     if (!filtro) return true;
@@ -20,13 +20,18 @@ export default function EmbalagensCRUD() {
 
   const startCreate = () => {
     setEditing(null);
-    setFormData({ descricao: '', unidade_id: 0, ativo: true });
+    setFormData({ descricao: '', unidade_id: 0, fator_conversao: 1, ativo: true });
     setShowForm(true);
   };
 
   const startEdit = (emb: EmbalagemCatalogo) => {
     setEditing(emb);
-    setFormData({ descricao: emb.descricao, unidade_id: emb.unidade_id, ativo: emb.ativo });
+    setFormData({ 
+      descricao: emb.descricao, 
+      unidade_id: emb.unidade_id, 
+      fator_conversao: typeof emb.fator_conversao === 'string' ? parseFloat(emb.fator_conversao) : emb.fator_conversao,
+      ativo: emb.ativo 
+    });
     setShowForm(true);
   };
 
@@ -36,9 +41,18 @@ export default function EmbalagensCRUD() {
       alert('Selecione a unidade');
       return;
     }
+    if (formData.fator_conversao <= 0) {
+      alert('Fator de conversão deve ser maior que zero');
+      return;
+    }
     let success = false;
     if (editing) {
-      const dto: UpdateEmbalagemCatalogoDTO = { descricao: formData.descricao, unidade_id: formData.unidade_id, ativo: formData.ativo };
+      const dto: UpdateEmbalagemCatalogoDTO = { 
+        descricao: formData.descricao, 
+        unidade_id: formData.unidade_id, 
+        fator_conversao: formData.fator_conversao,
+        ativo: formData.ativo 
+      };
       success = await update(editing.id, dto);
     } else {
       success = await create(formData);
@@ -46,7 +60,7 @@ export default function EmbalagensCRUD() {
     if (success) {
       setShowForm(false);
       setEditing(null);
-      setFormData({ descricao: '', unidade_id: 0, ativo: true });
+      setFormData({ descricao: '', unidade_id: 0, fator_conversao: 1, ativo: true });
     }
   };
 
@@ -137,6 +151,22 @@ export default function EmbalagensCRUD() {
                   ))}
                 </select>
               </div>
+              <div className="form-group">
+                <label htmlFor="fator_conversao">Fator de Conversão *</label>
+                <input
+                  id="fator_conversao"
+                  type="number"
+                  step="0.0001"
+                  min="0.0001"
+                  value={formData.fator_conversao}
+                  onChange={e => setFormData({ ...formData, fator_conversao: Number(e.target.value) })}
+                  required
+                  placeholder="Ex: 12 (caixa com 12 unidades)"
+                />
+                <small style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                  Quantidade da unidade base contida nesta embalagem
+                </small>
+              </div>
               <div className="form-group checkbox-group">
                 <label>
                   <input
@@ -168,6 +198,7 @@ export default function EmbalagensCRUD() {
                     <th>ID</th>
                     <th>Descrição</th>
                     <th>Unidade</th>
+                    <th>Fator</th>
                     <th>Ativo</th>
                     <th>Ações</th>
                   </tr>
@@ -175,7 +206,7 @@ export default function EmbalagensCRUD() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="empty">Nenhuma embalagem cadastrada</td>
+                      <td colSpan={6} className="empty">Nenhuma embalagem cadastrada</td>
                     </tr>
                   ) : (
                     filtered.map(e => (
@@ -183,6 +214,7 @@ export default function EmbalagensCRUD() {
                         <td>{e.id}</td>
                         <td>{e.descricao}</td>
                         <td>{unidades.find(u => u.id === e.unidade_id)?.sigla || e.unidade_id}</td>
+                        <td>{typeof e.fator_conversao === 'string' ? e.fator_conversao : e.fator_conversao}</td>
                         <td>{e.ativo ? <span className="badge-padrao">Sim</span> : <span className="badge-nao-padrao">Não</span>}</td>
                         <td className="actions">
                           <button className="btn-edit" onClick={() => startEdit(e)} title="Editar">

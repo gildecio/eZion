@@ -97,7 +97,7 @@ def criar_from_catalogo(item_id: int, data: EmbalagemItemFromCatalogCreate, db: 
             "item_id": item_id,
             "unidade_id": catalogo.unidade_id,
             "descricao": catalogo.descricao,
-            "fator_conversao": data.fator_conversao,
+            "fator_conversao": catalogo.fator_conversao,  # Usa o fator do catálogo
             "codigo_barras": data.codigo_barras,
             "padrao": data.padrao,
         },
