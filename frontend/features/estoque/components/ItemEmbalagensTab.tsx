@@ -386,7 +386,7 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
               };
             })
           : embalagens.map(e => ({
-              id: e.unidade_id,
+              id: e.id,
               descricao: e.descricao,
               unidade_id: e.unidade_id,
               fator_conversao: e.fator_conversao,
