@@ -34,7 +34,7 @@ export interface CreateItemDTO {
 }
 
 export interface UpdateItemDTO {
-  codigo?: string;
+  // codigo é imutável, não pode ser alterado
   codigo_alternativo?: string | null;
   descricao?: string;
   tipo?: TipoItem;

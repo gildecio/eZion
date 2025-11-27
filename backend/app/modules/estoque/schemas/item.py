@@ -36,7 +36,7 @@ class ItemCreate(BaseModel):
 
 
 class ItemUpdate(BaseModel):
-    codigo: str | None = Field(None, min_length=1, max_length=50)
+    # codigo é imutável, não pode ser alterado
     codigo_alternativo: str | None = Field(None, max_length=50)
     descricao: str | None = Field(None, min_length=1, max_length=255)
     tipo: TipoItem | None = None

@@ -146,24 +146,25 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
         }}>
           <div style={styles.formGroup}>
             <label style={styles.label}>
-              Código {item && '*'}
+              Código
               <input
                 type="text"
                 value={formData.codigo}
                 onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                 style={{
                   ...styles.input,
-                  ...(errors.codigo ? styles.inputError : {}),
-                  ...((!item) ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {})
+                  backgroundColor: '#f3f4f6',
+                  cursor: 'not-allowed'
                 }}
-                placeholder={item ? "Digite o código do item" : "Gerado automaticamente"}
+                placeholder={item ? "Código não pode ser alterado" : "Gerado automaticamente"}
                 maxLength={50}
-                readOnly={!item}
-                disabled={!item}
+                readOnly
+                disabled
               />
             </label>
-            {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
-            {!item && <small style={styles.helpText}>Será gerado automaticamente ao salvar</small>}
+            <small style={styles.helpText}>
+              {!item ? 'Será gerado automaticamente ao salvar' : 'Código não pode ser alterado'}
+            </small>
           </div>
 
           <div style={styles.formGroup}>
