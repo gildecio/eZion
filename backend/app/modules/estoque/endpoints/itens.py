@@ -64,6 +64,24 @@ def criar_item(
                 detail="O item só pode ser vinculado a um grupo folha (sem subgrupos)"
             )
     
+    # Gera código automaticamente se não fornecido
+    if not item_in.codigo or item_in.codigo.strip() == "":
+        # Busca o maior código numérico existente
+        from sqlalchemy import text
+        
+        result = db.execute(text("""
+            SELECT MAX(CAST(codigo AS INTEGER)) 
+            FROM itens 
+            WHERE codigo ~ '^[0-9]+$'
+        """)).scalar()
+        
+        next_codigo = (result or 0) + 1
+        item_in.codigo = str(next_codigo).zfill(6)  # Formata com 6 dígitos (000001, 000002, ...)
+    
+    # Se codigo_alternativo não foi fornecido, copia do codigo
+    if not item_in.codigo_alternativo or item_in.codigo_alternativo.strip() == "":
+        item_in.codigo_alternativo = item_in.codigo
+    
     item = item_repository.create(db, obj_in=item_in)
     return item
 

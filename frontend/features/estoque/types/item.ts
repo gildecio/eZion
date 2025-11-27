@@ -23,8 +23,8 @@ export interface Item {
 }
 
 export interface CreateItemDTO {
-  codigo: string;
-  codigo_alternativo?: string | null;
+  codigo?: string | null;  // Gerado automaticamente se não fornecido
+  codigo_alternativo?: string | null;  // Copia do código se não fornecido
   descricao: string;
   tipo: TipoItem;
   grupo_id?: number | null;

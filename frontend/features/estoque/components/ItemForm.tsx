@@ -83,9 +83,7 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.codigo.trim()) {
-      newErrors.codigo = 'Código é obrigatório';
-    }
+    // Código não é mais obrigatório (gerado automaticamente)
 
     if (!formData.descricao.trim()) {
       newErrors.descricao = 'Descrição é obrigatória';
@@ -148,20 +146,24 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
         }}>
           <div style={styles.formGroup}>
             <label style={styles.label}>
-              Código *
+              Código {item && '*'}
               <input
                 type="text"
                 value={formData.codigo}
                 onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                 style={{
                   ...styles.input,
-                  ...(errors.codigo ? styles.inputError : {})
+                  ...(errors.codigo ? styles.inputError : {}),
+                  ...((!item) ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {})
                 }}
-                placeholder="Digite o código do item"
+                placeholder={item ? "Digite o código do item" : "Gerado automaticamente"}
                 maxLength={50}
+                readOnly={!item}
+                disabled={!item}
               />
             </label>
             {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
+            {!item && <small style={styles.helpText}>Será gerado automaticamente ao salvar</small>}
           </div>
 
           <div style={styles.formGroup}>
@@ -171,11 +173,17 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
                 type="text"
                 value={formData.codigo_alternativo}
                 onChange={(e) => setFormData({ ...formData, codigo_alternativo: e.target.value })}
-                style={styles.input}
-                placeholder="Código alternativo (opcional)"
+                style={{
+                  ...styles.input,
+                  ...((!item) ? { backgroundColor: '#f3f4f6', cursor: 'not-allowed' } : {})
+                }}
+                placeholder={item ? "Código alternativo (opcional)" : "Mesmo valor do código"}
                 maxLength={50}
+                readOnly={!item}
+                disabled={!item}
               />
             </label>
+            {!item && <small style={styles.helpText}>Receberá o mesmo valor do código ao salvar</small>}
           </div>
 
           <div style={styles.formGroup}>
@@ -423,6 +431,11 @@ const styles = {
   errorText: {
     fontSize: '0.75rem',
     color: '#ef4444',
+  },
+  helpText: {
+    fontSize: '0.75rem',
+    color: '#6b7280',
+    marginTop: '0.25rem',
   },
   formActions: {
     display: 'flex',
