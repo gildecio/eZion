@@ -20,6 +20,7 @@ class Item(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     codigo = Column(String(50), nullable=False, unique=True, index=True)
+    codigo_alternativo = Column(String(50), nullable=True, index=True)
     descricao = Column(String(255), nullable=False, index=True)
     tipo = Column(SQLEnum(TipoItem), nullable=False, index=True)
     grupo_id = Column(Integer, ForeignKey('grupos_itens.id'), nullable=True, index=True)

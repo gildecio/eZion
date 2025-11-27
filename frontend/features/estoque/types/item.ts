@@ -11,6 +11,7 @@ export enum TipoItem {
 export interface Item {
   id: number;
   codigo: string;
+  codigo_alternativo?: string | null;
   descricao: string;
   tipo: TipoItem;
   grupo_id?: number | null;
@@ -23,6 +24,7 @@ export interface Item {
 
 export interface CreateItemDTO {
   codigo: string;
+  codigo_alternativo?: string | null;
   descricao: string;
   tipo: TipoItem;
   grupo_id?: number | null;
@@ -33,6 +35,7 @@ export interface CreateItemDTO {
 
 export interface UpdateItemDTO {
   codigo?: string;
+  codigo_alternativo?: string | null;
   descricao?: string;
   tipo?: TipoItem;
   grupo_id?: number | null;

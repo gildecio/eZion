@@ -15,6 +15,7 @@ class TipoItem(str, Enum):
 
 class ItemBase(BaseModel):
     codigo: str = Field(..., min_length=1, max_length=50, description="Código do item")
+    codigo_alternativo: str | None = Field(None, max_length=50, description="Código alternativo do item")
     descricao: str = Field(..., min_length=1, max_length=255, description="Descrição do item")
     tipo: TipoItem = Field(..., description="Tipo do item")
     grupo_id: int | None = Field(None, description="ID do grupo ao qual o item pertence")
@@ -29,6 +30,7 @@ class ItemCreate(ItemBase):
 
 class ItemUpdate(BaseModel):
     codigo: str | None = Field(None, min_length=1, max_length=50)
+    codigo_alternativo: str | None = Field(None, max_length=50)
     descricao: str | None = Field(None, min_length=1, max_length=255)
     tipo: TipoItem | None = None
     grupo_id: int | None = None

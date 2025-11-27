@@ -37,6 +37,7 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
   
   const [formData, setFormData] = useState({
     codigo: item?.codigo || '',
+    codigo_alternativo: item?.codigo_alternativo || '',
     descricao: item?.descricao || '',
     tipo: item?.tipo || ("Produto" as TipoItem),
     grupo_id: item?.grupo_id || null,
@@ -161,6 +162,20 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading }: ItemFo
               />
             </label>
             {errors.codigo && <span style={styles.errorText}>{errors.codigo}</span>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>
+              Código Alternativo
+              <input
+                type="text"
+                value={formData.codigo_alternativo}
+                onChange={(e) => setFormData({ ...formData, codigo_alternativo: e.target.value })}
+                style={styles.input}
+                placeholder="Código alternativo (opcional)"
+                maxLength={50}
+              />
+            </label>
           </div>
 
           <div style={styles.formGroup}>

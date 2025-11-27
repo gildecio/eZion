@@ -103,6 +103,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
         <thead>
           <tr>
             <th>Código</th>
+            <th>Cód. Alternativo</th>
             <th>Descrição</th>
             <th>Tipo</th>
             <th>Grupo</th>
@@ -113,6 +114,7 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
           {itens.map((item) => (
             <tr key={item.id}>
               <td>{item.codigo}</td>
+              <td>{item.codigo_alternativo || '-'}</td>
               <td>{item.descricao}</td>
               <td>
                 <span className={`tipo-badge tipo-${item.tipo.toLowerCase().replace(/\s+/g, '-')}`}>
