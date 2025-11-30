@@ -1,18 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRequisicoes } from '../hooks/useRequisicoes';
 import { useItens } from '../hooks/useItens';
-import type { Requisicao, CreateRequisicaoDTO, UpdateRequisicaoDTO } from '../types/requisicao';
+import { useLocais } from '../hooks/useLocais';
+import type { Requisicao, CreateRequisicaoDTO, UpdateRequisicaoDTO, StatusRequisicao } from '../types/requisicao';
 import RequisicaoForm from './RequisicaoForm';
 import { DeleteConfirmModal } from '@/shared/components/DeleteConfirmModal';
 
 export default function RequisicoesCRUD() {
   const { requisicoes, loading, error, create, update, remove, refresh } = useRequisicoes();
   const { itens } = useItens();
+  const { locais } = useLocais();
   const [showForm, setShowForm] = useState(false);
   const [selectedRequisicao, setSelectedRequisicao] = useState<Requisicao | undefined>(undefined);
   const [requisicaoToDelete, setRequisicaoToDelete] = useState<Requisicao | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  // Estados para filtros
+  const [filters, setFilters] = useState({
+    dataInicio: '',
+    dataFim: '',
+    localId: '',
+    status: '' as StatusRequisicao | '',
+  });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Carregar requisições com filtros
+  useEffect(() => {
+    const filterParams = {
+      data_inicio: filters.dataInicio || undefined,
+      data_fim: filters.dataFim || undefined,
+      local_id: filters.localId ? Number(filters.localId) : undefined,
+      status: filters.status || undefined,
+    };
+    refresh(filterParams);
+  }, [filters, refresh]);
 
   // Debug logs
   console.log('RequisicoesCRUD render:', { requisicoes, loading, error, itens: itens.length });
@@ -65,6 +87,22 @@ export default function RequisicoesCRUD() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      dataInicio: '',
+      dataFim: '',
+      localId: '',
+      status: '',
+    });
   };
 
   const getItemInfo = (itemId: number) => {
@@ -132,7 +170,94 @@ export default function RequisicoesCRUD() {
             />
           </div>
         ) : (
-          <div className="table-wrapper">
+          <>
+            {/* Filtros */}
+            <div className="filters-section">
+              <div className="filters-header">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="btn-toggle-filters"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  Filtros
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    style={{
+                      transform: showFilters ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s'
+                    }}
+                  >
+                    <path d="M3 4.5L6 7.5L9 4.5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                {(filters.dataInicio || filters.dataFim || filters.localId || filters.status) && (
+                  <button onClick={clearFilters} className="btn-clear-filters">
+                    Limpar Filtros
+                  </button>
+                )}
+              </div>
+
+              {showFilters && (
+                <div className="filters-content">
+                  <div className="filters-grid">
+                    <div className="filter-group">
+                      <label>Data Início</label>
+                      <input
+                        type="date"
+                        value={filters.dataInicio}
+                        onChange={(e) => handleFilterChange('dataInicio', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="filter-group">
+                      <label>Data Fim</label>
+                      <input
+                        type="date"
+                        value={filters.dataFim}
+                        onChange={(e) => handleFilterChange('dataFim', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="filter-group">
+                      <label>Local</label>
+                      <select
+                        value={filters.localId}
+                        onChange={(e) => handleFilterChange('localId', e.target.value)}
+                      >
+                        <option value="">Todos os locais</option>
+                        {locais.map((local) => (
+                          <option key={local.id} value={local.id}>
+                            {local.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="filter-group">
+                      <label>Status</label>
+                      <select
+                        value={filters.status}
+                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                      >
+                        <option value="">Todos os status</option>
+                        <option value="ABERTA">Aberta</option>
+                        <option value="ATENDIDA">Atendida</option>
+                        <option value="PARCIAL">Parcial</option>
+                        <option value="CANCELADA">Cancelada</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="table-wrapper">
             <table>
               <thead>
                 <tr>
@@ -242,6 +367,7 @@ export default function RequisicoesCRUD() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -484,6 +610,83 @@ export default function RequisicoesCRUD() {
           background: #e5e7eb;
           color: #374151;
         }
+        .filters-section {
+          padding: 1rem 2rem;
+          border-bottom: 1px solid #e5e7eb;
+          background: #f9fafb;
+        }
+        .filters-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+        .btn-toggle-filters {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #e5e7eb;
+          color: #374151;
+          border: none;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-toggle-filters:hover {
+          background: #d1d5db;
+        }
+        .btn-clear-filters {
+          padding: 0.5rem 1rem;
+          background: #dc2626;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-clear-filters:hover {
+          background: #b91c1c;
+        }
+        .filters-content {
+          background: white;
+          border-radius: 8px;
+          padding: 1rem;
+          border: 1px solid #e5e7eb;
+        }
+        .filters-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+        .filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .filter-group label {
+          font-weight: 500;
+          color: #374151;
+          font-size: 0.875rem;
+        }
+        .filter-group input,
+        .filter-group select {
+          padding: 0.5rem 0.75rem;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          font-size: 0.875rem;
+          transition: border-color 0.2s;
+        }
+        .filter-group input:focus,
+        .filter-group select:focus {
+          outline: none;
+          border-color: #556b2f;
+          box-shadow: 0 0 0 3px rgba(85, 107, 47, 0.1);
+        }
         @media (max-width: 768px) {
           .requisicoes-crud {
             padding: 1rem;
@@ -499,6 +702,12 @@ export default function RequisicoesCRUD() {
           }
           .form-container {
             padding: 1rem;
+          }
+          .filters-section {
+            padding: 1rem;
+          }
+          .filters-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
