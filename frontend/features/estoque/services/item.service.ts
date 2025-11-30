@@ -8,7 +8,7 @@ interface GetAllFilters {
 
 export class ItemService {
   async getAll(filters?: GetAllFilters): Promise<Item[]> {
-    let url = '/estoque/itens/';
+    let url = '/api/v1/estoque/itens/';
     const params = new URLSearchParams();
     
     if (filters) {
@@ -30,22 +30,22 @@ export class ItemService {
   }
 
   async getById(id: number): Promise<Item> {
-    const response = await apiClient.get<Item>(`/estoque/itens/${id}`);
+    const response = await apiClient.get<Item>(`/api/v1/estoque/itens/${id}`);
     return response.data;
   }
 
   async create(data: CreateItemDTO): Promise<Item> {
-    const response = await apiClient.post<Item>('/estoque/itens/', data);
+    const response = await apiClient.post<Item>('/api/v1/estoque/itens/', data);
     return response.data;
   }
 
   async update(id: number, data: UpdateItemDTO): Promise<Item> {
-    const response = await apiClient.put<Item>(`/estoque/itens/${id}`, data);
+    const response = await apiClient.put<Item>(`/api/v1/estoque/itens/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/estoque/itens/${id}`);
+    await apiClient.delete(`/api/v1/estoque/itens/${id}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api-client';
 import { Local, LocalCreate, LocalUpdate } from '../types/local';
 
-const BASE_URL = '/estoque/locais/';
+const BASE_URL = '/api/v1/estoque/locais/';
 
 export const localService = {
   async getAll(apenasAtivos: boolean = false): Promise<Local[]> {

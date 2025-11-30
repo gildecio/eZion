@@ -8,7 +8,7 @@ import type {
   MovimentacaoFilters,
 } from '../types/movimentacao';
 
-const BASE_PATH = '/estoque/movimentacoes';
+const BASE_PATH = '/api/v1/estoque/movimentacoes';
 
 export class MovimentacaoService {
   async getAll(filters?: MovimentacaoFilters): Promise<MovimentacaoEstoque[]> {

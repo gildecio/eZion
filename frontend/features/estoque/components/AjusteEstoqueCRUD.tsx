@@ -125,8 +125,10 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
   };
 
   const loadEmbalagensDoItem = async (item_id: number) => {
+    console.log('loadEmbalagensDoItem called with item_id:', item_id);
     try {
       const embs = await embalagemService.getByItem(item_id);
+      console.log('Embalagens loaded:', embs);
       setEmbalagensDoItem(embs);
       
       // Adiciona ao cache
@@ -139,9 +141,14 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
       // Selecionar embalagem padrão se houver
       const padrao = embs.find(e => e.padrao);
       if (padrao) {
+        console.log('Setting default embalagem:', padrao.id);
         setEmbalagemId(padrao.id);
       } else if (embs.length > 0) {
+        console.log('Setting first embalagem:', embs[0].id);
         setEmbalagemId(embs[0].id);
+      } else {
+        console.log('No embalagens found, setting null');
+        setEmbalagemId(null);
       }
     } catch (error) {
       console.error('Erro ao carregar embalagens:', error);
@@ -249,6 +256,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
   };
 
   const handleItemChange = (item_id: number | null) => {
+    console.log('handleItemChange called with item_id:', item_id);
     setItemId(item_id);
     if (item_id) {
       loadEmbalagensDoItem(item_id);
@@ -822,7 +830,7 @@ const AjusteEstoqueCRUD: React.FC<AjusteEstoqueCRUDProps> = ({ empresaId }) => {
                     <select
                       value={embalagemId || ''}
                       onChange={(e) => setEmbalagemId(Number(e.target.value) || null)}
-                      disabled={!itemId || embalagensDoItem.length === 0}
+                      disabled={!itemId}
                     >
                       <option value="">Selecione...</option>
                       {embalagensDoItem.map((emb) => (

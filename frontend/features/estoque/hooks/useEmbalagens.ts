@@ -54,9 +54,8 @@ export function useEmbalagens(itemId?: number) {
     try {
       setError(null);
       // Update only allowed fields in association
-      const itemId = data.item_id;
+      if (!itemId) throw new Error('itemId is required');
       await itemEmbalagensService.update(itemId, id, {
-        fator_conversao: data.fator_conversao,
         codigo_barras: data.codigo_barras ?? undefined,
         padrao: data.padrao,
       });

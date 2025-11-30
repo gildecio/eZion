@@ -23,7 +23,6 @@ export default function ItemTable({ itens, onEdit, onDelete, isLoading }: ItemTa
         console.error('Erro ao carregar grupos:', error);
       }
     };
-
     loadGrupos();
   }, []);
   if (isLoading) {

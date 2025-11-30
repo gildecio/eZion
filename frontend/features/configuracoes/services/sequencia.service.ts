@@ -22,28 +22,28 @@ export const sequenciaService = {
     }
 
     const query = queryParams.toString();
-    const url = `/configuracoes/sequencias/${query ? `?${query}` : ''}`;
+    const url = `/api/v1/configuracoes/sequencias/${query ? `?${query}` : ''}`;
     
     const response = await apiClient.get<Sequencia[]>(url);
     return response.data;
   },
 
   async getById(id: number): Promise<Sequencia> {
-    const response = await apiClient.get<Sequencia>(`/configuracoes/sequencias/${id}`);
+    const response = await apiClient.get<Sequencia>(`/api/v1/configuracoes/sequencias/${id}`);
     return response.data;
   },
 
   async create(data: CreateSequenciaDTO): Promise<Sequencia> {
-    const response = await apiClient.post<Sequencia>('/configuracoes/sequencias/', data);
+    const response = await apiClient.post<Sequencia>('/api/v1/configuracoes/sequencias/', data);
     return response.data;
   },
 
   async update(id: number, data: UpdateSequenciaDTO): Promise<Sequencia> {
-    const response = await apiClient.put<Sequencia>(`/configuracoes/sequencias/${id}`, data);
+    const response = await apiClient.put<Sequencia>(`/api/v1/configuracoes/sequencias/${id}`, data);
     return response.data;
   },
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/configuracoes/sequencias/${id}`);
+    await apiClient.delete(`/api/v1/configuracoes/sequencias/${id}`);
   }
 };

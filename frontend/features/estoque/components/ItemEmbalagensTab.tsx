@@ -31,6 +31,7 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
   // Form state for adding/editing
   const [formData, setFormData] = useState({
     catalogo_embalagem_id: 0,
+    fator_conversao: 1,
     codigo_barras: '',
     padrao: false,
   });
@@ -100,6 +101,7 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
 
       const newEmbalagem: CreateItemEmbalagemFromCatalogDTO = {
         catalogo_embalagem_id: formData.catalogo_embalagem_id,
+        fator_conversao: 1,
         codigo_barras: formData.codigo_barras || undefined,
         padrao: formData.padrao,
       };
@@ -113,6 +115,7 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
       
       setFormData({
         catalogo_embalagem_id: 0,
+        fator_conversao: 1,
         codigo_barras: '',
         padrao: false,
       });
@@ -126,12 +129,14 @@ const ItemEmbalagensTab: React.FC<ItemEmbalagensTabProps> = ({
       setLoading(true);
       await itemEmbalagensService.createFromCatalog(item!.id, {
         catalogo_embalagem_id: formData.catalogo_embalagem_id,
+        fator_conversao: formData.fator_conversao,
         codigo_barras: formData.codigo_barras || undefined,
         padrao: formData.padrao,
       });
       await loadEmbalagens();
       setFormData({
         catalogo_embalagem_id: 0,
+        fator_conversao: 1,
         codigo_barras: '',
         padrao: false,
       });

@@ -14,7 +14,7 @@ export interface ApiError {
 
 class ApiClient {
   private baseURL: string;
-  private apiPrefix: string = '/api/v1';
+  // Removido apiPrefix, URLs devem ser completas nos serviços
   private timeout: number;
 
   constructor() {
@@ -26,13 +26,18 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    // Only make requests on client side
+    if (typeof window === 'undefined') {
+      throw new Error('API requests can only be made on the client side');
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-    // Adiciona o prefixo /api/v1 automaticamente se o endpoint não começar com http
+    // URLs devem ser completas, sem acréscimo automático de prefixo
     const url = endpoint.startsWith('http') 
       ? endpoint 
-      : `${this.baseURL}${this.apiPrefix}${endpoint}`;
+      : `${this.baseURL}${endpoint}`;
 
     try {
       const response = await fetch(url, {

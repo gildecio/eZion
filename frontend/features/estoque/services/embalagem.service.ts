@@ -10,28 +10,28 @@ import type {
 class EmbalagemService {
   async getByItem(itemId: number): Promise<EmbalagemItemWithUnidade[]> {
     const response = await apiClient.get<EmbalagemItemWithUnidade[]>(
-      `/estoque/embalagens/item/${itemId}`
+      `/api/v1/estoque/embalagens/item/${itemId}`
     );
     return response.data;
   }
 
   async getById(id: number): Promise<EmbalagemItem> {
-    const response = await apiClient.get<EmbalagemItem>(`/estoque/embalagens/${id}`);
+    const response = await apiClient.get<EmbalagemItem>(`/api/v1/estoque/embalagens/${id}`);
     return response.data;
   }
 
   async create(data: CreateEmbalagemItemDTO): Promise<EmbalagemItem> {
-    const response = await apiClient.post<EmbalagemItem>('/estoque/embalagens/', data);
+    const response = await apiClient.post<EmbalagemItem>('/api/v1/estoque/embalagens/', data);
     return response.data;
   }
 
   async update(id: number, data: UpdateEmbalagemItemDTO): Promise<EmbalagemItem> {
-    const response = await apiClient.put<EmbalagemItem>(`/estoque/embalagens/${id}`, data);
+    const response = await apiClient.put<EmbalagemItem>(`/api/v1/estoque/embalagens/${id}`, data);
     return response.data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/estoque/embalagens/${id}`);
+    await apiClient.delete(`/api/v1/estoque/embalagens/${id}`);
   }
 }
 

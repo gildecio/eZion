@@ -26,28 +26,28 @@ export const ajusteEstoqueService = {
     }
 
     const query = queryParams.toString();
-    const url = `/estoque/ajustes/${query ? `?${query}` : ''}`;
+    const url = `/api/v1/estoque/ajustes/${query ? `?${query}` : ''}`;
     
     const response = await apiClient.get<AjusteEstoque[]>(url);
     return response.data;
   },
 
   async getById(id: number): Promise<AjusteEstoque> {
-    const response = await apiClient.get<AjusteEstoque>(`/estoque/ajustes/${id}`);
+    const response = await apiClient.get<AjusteEstoque>(`/api/v1/estoque/ajustes/${id}`);
     return response.data;
   },
 
   async create(data: CreateAjusteEstoqueDTO): Promise<AjusteEstoque> {
-    const response = await apiClient.post<AjusteEstoque>('/estoque/ajustes/', data);
+    const response = await apiClient.post<AjusteEstoque>('/api/v1/estoque/ajustes/', data);
     return response.data;
   },
 
   async update(id: number, data: UpdateAjusteEstoqueDTO): Promise<AjusteEstoque> {
-    const response = await apiClient.put<AjusteEstoque>(`/estoque/ajustes/${id}`, data);
+    const response = await apiClient.put<AjusteEstoque>(`/api/v1/estoque/ajustes/${id}`, data);
     return response.data;
   },
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete(`/estoque/ajustes/${id}`);
+    await apiClient.delete(`/api/v1/estoque/ajustes/${id}`);
   }
 };

@@ -8,27 +8,27 @@ import type {
 
 class ItemEmbalagensService {
   async list(itemId: number): Promise<EmbalagemItemWithUnidade[]> {
-    const { data } = await apiClient.get<EmbalagemItemWithUnidade[]>(`/estoque/itens/${itemId}/embalagens`);
+    const { data } = await apiClient.get<EmbalagemItemWithUnidade[]>(`/api/v1/estoque/itens/${itemId}/embalagens`);
     return data;
   }
 
   async createFromCatalog(itemId: number, dto: CreateItemEmbalagemFromCatalogDTO): Promise<EmbalagemItem> {
-    const { data } = await apiClient.post<EmbalagemItem>(`/estoque/itens/${itemId}/embalagens/from-catalogo`, dto);
+    const { data } = await apiClient.post<EmbalagemItem>(`/api/v1/estoque/itens/${itemId}/embalagens/from-catalogo`, dto);
     return data;
   }
 
   async setDefault(itemId: number, embalagemItemId: number): Promise<EmbalagemItem> {
-    const { data } = await apiClient.put<EmbalagemItem>(`/estoque/itens/${itemId}/embalagens/${embalagemItemId}/set-default`, {});
+    const { data } = await apiClient.put<EmbalagemItem>(`/api/v1/estoque/itens/${itemId}/embalagens/${embalagemItemId}/set-default`, {});
     return data;
   }
 
   async update(itemId: number, embalagemItemId: number, dto: UpdateItemEmbalagemDTO): Promise<EmbalagemItem> {
-    const { data } = await apiClient.put<EmbalagemItem>(`/estoque/itens/${itemId}/embalagens/${embalagemItemId}`, dto);
+    const { data } = await apiClient.put<EmbalagemItem>(`/api/v1/estoque/itens/${itemId}/embalagens/${embalagemItemId}`, dto);
     return data;
   }
 
   async delete(itemId: number, embalagemItemId: number): Promise<void> {
-    await apiClient.delete<void>(`/estoque/itens/${itemId}/embalagens/${embalagemItemId}`);
+    await apiClient.delete<void>(`/api/v1/estoque/itens/${itemId}/embalagens/${embalagemItemId}`);
   }
 }
 

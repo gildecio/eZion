@@ -18,23 +18,34 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/dashboard');
+    } else {
+      // Only load empresas on client side
+      if (typeof window !== 'undefined') {
+        loadEmpresas();
+      }
     }
   }, [isAuthenticated, router]);
 
-  useEffect(() => {
-    loadEmpresas();
-  }, []);
-
   const loadEmpresas = async () => {
     try {
-      const data = await empresaService.getAll();
-      console.log('Empresas carregadas:', data);
+      const response = await fetch('http://localhost:8000/api/v1/contabil/empresas/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
       setEmpresas(data);
       if (data.length > 0) {
         setEmpresaId(data[0].id);
+        setError(''); // Limpar erro se conseguiu carregar
+      } else {
+        setEmpresaId(null);
+        setError('Nenhuma empresa cadastrada no sistema. Entre em contato com o administrador.');
       }
-      // Limpar erro se conseguiu carregar
-      setError('');
     } catch (err: any) {
       console.error('Erro ao carregar empresas:', err);
       const errorMsg = err.message || 'Erro de conexão com o servidor';
@@ -45,6 +56,8 @@ export default function LoginPage() {
       } else {
         setError('Erro ao carregar empresas: ' + errorMsg);
       }
+      setEmpresaId(null);
+      setEmpresas([]);
     }
   };
 
@@ -52,8 +65,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     
-    if (!empresaId) {
-      setError('Selecione uma empresa');
+    if (empresas.length === 0) {
+      setError('Nenhuma empresa disponível. Entre em contato com o administrador.');
+      return;
+    }
+
+    if (!empresaId || empresaId === 0) {
+      setError('Selecione uma empresa para continuar');
+      return;
+    }
+
+    if (!username.trim()) {
+      setError('Digite seu usuário');
+      return;
+    }
+
+    if (!password.trim()) {
+      setError('Digite sua senha');
       return;
     }
 
@@ -140,13 +168,21 @@ export default function LoginPage() {
                 required
                 disabled={loading}
               >
-                <option value="">Selecione uma empresa...</option>
-                {empresas.map((empresa) => (
-                  <option key={empresa.id} value={empresa.id}>
-                    {empresa.razao_social} - {empresa.cnpj}
-                  </option>
-                ))}
+                {empresas.length === 0 ? (
+                  <option value="" disabled>Carregando empresas...</option>
+                ) : (
+                  empresas.map((empresa) => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.razao_social} - {empresa.cnpj}
+                    </option>
+                  ))
+                )}
               </select>
+              {empresas.length === 1 && (
+                <small style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                  Empresa selecionada automaticamente
+                </small>
+              )}
             </div>
 
             <div className="form-group">

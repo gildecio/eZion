@@ -3,27 +3,27 @@ import type { EmbalagemCatalogo, CreateEmbalagemCatalogoDTO, UpdateEmbalagemCata
 
 class EmbalagemCatalogoService {
   async getAll(): Promise<EmbalagemCatalogo[]> {
-    const { data } = await apiClient.get<EmbalagemCatalogo[]>('/estoque/embalagens-catalogo');
+    const { data } = await apiClient.get<EmbalagemCatalogo[]>('/api/v1/estoque/embalagens-catalogo');
     return data;
   }
 
   async getById(id: number): Promise<EmbalagemCatalogo> {
-    const { data } = await apiClient.get<EmbalagemCatalogo>(`/estoque/embalagens-catalogo/${id}`);
+    const { data } = await apiClient.get<EmbalagemCatalogo>(`/api/v1/estoque/embalagens-catalogo/${id}`);
     return data;
   }
 
   async create(dto: CreateEmbalagemCatalogoDTO): Promise<EmbalagemCatalogo> {
-    const { data } = await apiClient.post<EmbalagemCatalogo>('/estoque/embalagens-catalogo', dto);
+    const { data } = await apiClient.post<EmbalagemCatalogo>('/api/v1/estoque/embalagens-catalogo', dto);
     return data;
   }
 
   async update(id: number, dto: UpdateEmbalagemCatalogoDTO): Promise<EmbalagemCatalogo> {
-    const { data } = await apiClient.put<EmbalagemCatalogo>(`/estoque/embalagens-catalogo/${id}`, dto);
+    const { data } = await apiClient.put<EmbalagemCatalogo>(`/api/v1/estoque/embalagens-catalogo/${id}`, dto);
     return data;
   }
 
   async delete(id: number): Promise<void> {
-    await apiClient.delete<void>(`/estoque/embalagens-catalogo/${id}`);
+    await apiClient.delete<void>(`/api/v1/estoque/embalagens-catalogo/${id}`);
   }
 }
 

@@ -57,7 +57,7 @@ export default function Sidebar() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           }
-          items={[
+          items={[ 
             { href: '/estoque/itens', label: 'Itens', icon: 'tag' },
             { href: '/estoque/grupos', label: 'Grupos', icon: 'folder' },
             { href: '/estoque/unidades', label: 'Unidades', icon: 'scale' },
@@ -67,6 +67,7 @@ export default function Sidebar() {
             { href: '/estoque/ajustes', label: 'Ajustes', icon: 'edit' },
             { href: '/estoque/movimentacoes', label: 'Movimentações', icon: 'arrows' },
             { href: '/estoque/saldos', label: 'Saldos', icon: 'chart' },
+            { href: '/estoque/requisicoes', label: 'Requisições', icon: 'clipboard' },
           ]}
           className={`${router.pathname.startsWith('/estoque') ? 'active' : ''}`}
         />

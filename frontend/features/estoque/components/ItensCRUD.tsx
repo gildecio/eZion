@@ -55,17 +55,27 @@ export default function ItensCRUD() {
   const handleSubmit = async (data: CreateItemDTO | UpdateItemDTO, pendingEmbalagens?: CreateItemEmbalagemFromCatalogDTO[]) => {
     setIsSubmitting(true);
     try {
+      let savedItem: Item | undefined;
       if (selectedItem) {
-        await update(selectedItem.id, data as UpdateItemDTO);
+        savedItem = await update(selectedItem.id, data as UpdateItemDTO);
+        // Atualiza o item editado na lista
+        if (savedItem) {
+          const idx = itens.findIndex(i => i.id === savedItem!.id);
+          if (idx !== -1) {
+            itens[idx] = savedItem;
+          }
+        }
       } else {
-        // Criar o item
-        const newItem = await create(data as CreateItemDTO);
-        
+        savedItem = await create(data as CreateItemDTO);
+        // Adiciona o novo item à lista
+        if (savedItem) {
+          itens.push(savedItem);
+        }
         // Se houver embalagens pendentes, salvá-las agora
-        if (pendingEmbalagens && pendingEmbalagens.length > 0 && newItem) {
+        if (pendingEmbalagens && pendingEmbalagens.length > 0 && savedItem) {
           for (const embalagem of pendingEmbalagens) {
             try {
-              await itemEmbalagensService.createFromCatalog(newItem.id, embalagem);
+              await itemEmbalagensService.createFromCatalog(savedItem.id, embalagem);
             } catch (embError) {
               console.error('Erro ao salvar embalagem:', embError);
               // Continua salvando as outras embalagens mesmo se uma falhar

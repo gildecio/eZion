@@ -60,6 +60,7 @@ export interface UpdateEmbalagemCatalogoDTO {
 // Associação de item com embalagem do catálogo
 export interface CreateItemEmbalagemFromCatalogDTO {
   catalogo_embalagem_id: number;
+  fator_conversao: number;
   codigo_barras?: string | null;
   padrao?: boolean;
 }
