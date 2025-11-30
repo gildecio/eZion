@@ -52,7 +52,7 @@ def create_sequencia(sequencia: SequenciaCreate, db: Session = Depends(get_db)):
         serie_info = f" e série '{sequencia.serie}'" if sequencia.serie else ""
         raise HTTPException(
             status_code=400,
-            detail=f"Já existe uma sequência para o tipo '{sequencia.documento_tipo}'{serie_info}"
+            detail=f"Já existe uma sequência para o tipo '{sequencia.documento_tipo}'{serie_info} na empresa selecionada."
         )
     
     return sequencia_repository.create(db, obj_in=sequencia)

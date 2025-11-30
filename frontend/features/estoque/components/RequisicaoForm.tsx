@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import type { CreateRequisicaoDTO, Requisicao, UpdateRequisicaoDTO, RequisicaoItem } from '../types/requisicao';
 import { useItens } from '../hooks/useItens';
+import { useEmbalagens } from '../hooks/useEmbalagens';
+import type { Item } from '../types/item';
+import type { EmbalagemItemWithUnidade } from '../types/embalagem';
+
+// Tipo local para itens da requisição com informações completas
+interface RequisicaoItemComInfo extends RequisicaoItem {
+  item_info?: Item;
+  embalagem_info?: EmbalagemItemWithUnidade;
+}
 
 interface Props {
   requisicao?: Requisicao;
@@ -10,11 +21,29 @@ interface Props {
 }
 
 export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoading }: Props) {
-  const { itens } = useItens();
+  const { itens, loading: loadingItens, error: errorItens } = useItens();
   const [solicitante, setSolicitante] = useState(requisicao?.solicitante || '');
-  const [observacao, setObservacao] = useState(requisicao?.observacao || '');
-  const [itensReq, setItensReq] = useState<RequisicaoItem[]>(requisicao?.itens || []);
+  const [itensReq, setItensReq] = useState<RequisicaoItemComInfo[]>(requisicao?.itens || []);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [novoItemId, setNovoItemId] = useState<number>(0);
+  const [novaQuantidade, setNovaQuantidade] = useState<number>(1);
+  const { embalagens, loading: loadingEmbalagens } = useEmbalagens(novoItemId || undefined);
+  const [novaEmbalagemId, setNovaEmbalagemId] = useState<number>(0);
+
+  // Selecionar embalagem padrão automaticamente quando embalagens são carregadas
+  useEffect(() => {
+    if (embalagens.length > 0) {
+      const embalagemPadrao = embalagens.find(emb => emb.padrao);
+      if (embalagemPadrao) {
+        setNovaEmbalagemId(embalagemPadrao.id);
+      } else {
+        // Se não há embalagem padrão, seleciona a primeira
+        setNovaEmbalagemId(embalagens[0].id);
+      }
+    } else {
+      setNovaEmbalagemId(0);
+    }
+  }, [embalagens]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -31,9 +60,6 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
       if (!item.item_id) {
         newErrors[`item_${idx}_id`] = 'Selecione um item';
       }
-      if (!item.quantidade || item.quantidade <= 0) {
-        newErrors[`item_${idx}_quantidade`] = 'Quantidade deve ser maior que zero';
-      }
     });
 
     setErrors(newErrors);
@@ -41,7 +67,25 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
   };
 
   const handleAddItem = () => {
-    setItensReq([...itensReq, { item_id: 0, quantidade: 1 }]);
+    if (!novoItemId || !novaEmbalagemId || novaQuantidade <= 0) {
+      return;
+    }
+
+    // Buscar informações do item e embalagem selecionados
+    const itemInfo = itens.find(i => i.id === novoItemId);
+    const embalagemInfo = embalagens.find(e => e.id === novaEmbalagemId);
+
+    if (!itemInfo || !embalagemInfo) {
+      return;
+    }
+
+    setItensReq([...itensReq, {
+      item_id: novoItemId,
+      embalagem_id: novaEmbalagemId,
+      quantidade: novaQuantidade,
+      item_info: itemInfo,
+      embalagem_info: embalagemInfo
+    }]);
     // Limpa erros relacionados aos itens quando adiciona um novo
     const newErrors = { ...errors };
     Object.keys(newErrors).forEach(key => {
@@ -50,20 +94,11 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
       }
     });
     setErrors(newErrors);
-  };
 
-  const handleItemChange = (idx: number, field: keyof RequisicaoItem, value: any) => {
-    const newItens = [...itensReq];
-    newItens[idx][field] = value;
-    setItensReq(newItens);
-
-    // Limpa erro específico do campo alterado
-    const errorKey = `item_${idx}_${field}`;
-    if (errors[errorKey]) {
-      const newErrors = { ...errors };
-      delete newErrors[errorKey];
-      setErrors(newErrors);
-    }
+    // Limpa os campos do novo item
+    setNovoItemId(0);
+    setNovaEmbalagemId(0);
+    setNovaQuantidade(1);
   };
 
   const handleRemoveItem = (idx: number) => {
@@ -81,49 +116,42 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit({ solicitante, observacao, itens: itensReq });
+      // Remover informações extras antes de enviar para a API
+      const itensParaEnvio = itensReq.map(item => ({
+        item_id: item.item_id,
+        embalagem_id: item.embalagem_id,
+        quantidade: item.quantidade
+      }));
+      onSubmit({ solicitante, itens: itensParaEnvio });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.formGroup}>
-        <label style={styles.label} htmlFor="solicitante">
-          Solicitante *
-        </label>
-        <input
-          id="solicitante"
-          type="text"
-          value={solicitante}
-          onChange={(e) => {
-            setSolicitante(e.target.value);
-            if (errors.solicitante) {
-              setErrors({ ...errors, solicitante: '' });
-            }
-          }}
-          style={{
-            ...styles.input,
-            ...(errors.solicitante ? styles.inputError : {})
-          }}
-          placeholder="Digite o nome do solicitante"
-          maxLength={255}
-        />
-        {errors.solicitante && <span style={styles.errorText}>{errors.solicitante}</span>}
-      </div>
-
-      <div style={styles.formGroup}>
-        <label style={styles.label} htmlFor="observacao">
-          Observação
-        </label>
-        <textarea
-          id="observacao"
-          value={observacao}
-          onChange={(e) => setObservacao(e.target.value)}
-          style={styles.textarea}
-          placeholder="Observações adicionais (opcional)"
-          rows={3}
-          maxLength={500}
-        />
+      <div style={styles.formGrid}>
+        <div style={styles.formGroup}>
+          <label style={styles.label} htmlFor="solicitante">
+            Solicitante *
+          </label>
+          <input
+            id="solicitante"
+            type="text"
+            value={solicitante}
+            onChange={(e) => {
+              setSolicitante(e.target.value);
+              if (errors.solicitante) {
+                setErrors({ ...errors, solicitante: '' });
+              }
+            }}
+            style={{
+              ...styles.input,
+              ...(errors.solicitante ? styles.inputError : {})
+            }}
+            placeholder="Digite o nome do solicitante"
+            maxLength={255}
+          />
+          {errors.solicitante && <span style={styles.errorText}>{errors.solicitante}</span>}
+        </div>
       </div>
 
       <div style={styles.formGroup}>
@@ -131,73 +159,125 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
           Itens da Requisição *
         </label>
 
-        {itensReq.length === 0 && (
-          <div style={styles.emptyItems}>
-            Nenhum item adicionado. Clique em "Adicionar Item" para começar.
+        {/* Form para adicionar novo item */}
+        <div style={styles.addItemForm}>
+          <div style={styles.addItemField}>
+            <select
+              value={novoItemId}
+              onChange={(e) => setNovoItemId(Number(e.target.value))}
+              style={styles.select}
+              disabled={loadingItens}
+            >
+              <option value={0}>
+                {loadingItens ? 'Carregando itens...' : errorItens ? `Erro: ${errorItens}` : itens.length === 0 ? 'Nenhum item disponível' : 'Selecione o item...'}
+              </option>
+              {itens.map(i => (
+                <option key={i.id} value={i.id}>{i.codigo} - {i.descricao}</option>
+              ))}
+            </select>
+            {errorItens && <span style={styles.errorText}>{errorItens}</span>}
+          </div>
+
+          <div style={styles.addItemField}>
+            <select
+              value={novaEmbalagemId}
+              onChange={(e) => setNovaEmbalagemId(Number(e.target.value))}
+              style={styles.select}
+              disabled={loadingEmbalagens || !novoItemId}
+            >
+              <option value={0}>
+                {!novoItemId ? 'Selecione um item primeiro' : loadingEmbalagens ? 'Carregando embalagens...' : embalagens.length === 0 ? 'Nenhuma embalagem disponível' : 'Selecione a embalagem...'}
+              </option>
+              {embalagens.map(emb => (
+                <option key={emb.id} value={emb.id}>
+                  {emb.descricao} {emb.padrao ? '(Padrão)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.addQuantityField}>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={novaQuantidade}
+              onChange={(e) => setNovaQuantidade(Number(e.target.value))}
+              style={{
+                ...styles.input,
+                width: '80px',
+              }}
+              placeholder="Qtd"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAddItem}
+            style={styles.addItemButton}
+            disabled={!novoItemId || !novaEmbalagemId || novaQuantidade <= 0}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Adicionar
+          </button>
+        </div>
+
+        {/* Tabela com itens adicionados */}
+        {itensReq.length > 0 && (
+          <div style={styles.itemsTable}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.tableHeader}>Item</th>
+                  <th style={styles.tableHeader}>Embalagem</th>
+                  <th style={styles.tableHeader}>Quantidade</th>
+                  <th style={styles.tableHeader}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itensReq.map((item, idx) => {
+                  const itemInfo = item.item_info || itens.find(i => i.id === item.item_id);
+                  const embalagemInfo = item.embalagem_info;
+                  return (
+                    <tr key={idx} style={styles.tableRow}>
+                      <td style={styles.tableCell}>
+                        {itemInfo ? `${itemInfo.codigo} - ${itemInfo.descricao}` : 'Item não encontrado'}
+                      </td>
+                      <td style={styles.tableCell}>
+                        {embalagemInfo ? embalagemInfo.descricao : 'Embalagem não encontrada'}
+                      </td>
+                      <td style={styles.tableCell}>
+                        {item.quantidade}
+                      </td>
+                      <td style={styles.tableCell}>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(idx)}
+                          style={styles.removeButton}
+                          title="Remover item"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
 
-        {itensReq.map((item, idx) => (
-          <div key={idx} style={styles.itemRow}>
-            <div style={styles.itemField}>
-              <select
-                value={item.item_id}
-                onChange={(e) => handleItemChange(idx, 'item_id', Number(e.target.value))}
-                style={{
-                  ...styles.select,
-                  ...(errors[`item_${idx}_id`] ? styles.inputError : {})
-                }}
-              >
-                <option value="">Selecione o item...</option>
-                {itens.map(i => (
-                  <option key={i.id} value={i.id}>{i.codigo} - {i.descricao}</option>
-                ))}
-              </select>
-              {errors[`item_${idx}_id`] && <span style={styles.errorText}>{errors[`item_${idx}_id`]}</span>}
-            </div>
-
-            <div style={styles.quantityField}>
-              <input
-                type="number"
-                min={1}
-                step={1}
-                value={item.quantidade}
-                onChange={(e) => handleItemChange(idx, 'quantidade', Number(e.target.value))}
-                style={{
-                  ...styles.input,
-                  width: '80px',
-                  ...(errors[`item_${idx}_quantidade`] ? styles.inputError : {})
-                }}
-                placeholder="Qtd"
-              />
-              {errors[`item_${idx}_quantidade`] && <span style={styles.errorText}>{errors[`item_${idx}_quantidade`]}</span>}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handleRemoveItem(idx)}
-              style={styles.removeButton}
-              title="Remover item"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        {itensReq.length === 0 && (
+          <div style={styles.emptyItems}>
+            Nenhum item adicionado ainda.
           </div>
-        ))}
+        )}
 
         {errors.itens && <span style={styles.errorText}>{errors.itens}</span>}
-
-        <button
-          type="button"
-          onClick={handleAddItem}
-          style={styles.addButton}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Adicionar Item
-        </button>
       </div>
 
       <div style={styles.formActions}>
@@ -228,6 +308,12 @@ const styles = {
     gap: '1.5rem',
     maxWidth: '800px',
   },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '1.5rem',
+    alignItems: 'start',
+  },
   formGroup: {
     display: 'flex',
     flexDirection: 'column' as const,
@@ -243,16 +329,6 @@ const styles = {
     border: '1px solid #d1d5db',
     borderRadius: '0.375rem',
     fontSize: '0.875rem',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    outline: 'none',
-  },
-  textarea: {
-    padding: '0.625rem',
-    border: '1px solid #d1d5db',
-    borderRadius: '0.375rem',
-    fontSize: '0.875rem',
-    fontFamily: 'inherit',
-    resize: 'vertical' as const,
     transition: 'border-color 0.2s, box-shadow 0.2s',
     outline: 'none',
   },
@@ -284,28 +360,6 @@ const styles = {
     fontSize: '0.875rem',
     textAlign: 'center' as const,
   },
-  itemRow: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '1rem',
-    padding: '1rem',
-    backgroundColor: '#f9fafb',
-    border: '1px solid #e5e7eb',
-    borderRadius: '0.5rem',
-    marginBottom: '0.75rem',
-  },
-  itemField: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.25rem',
-  },
-  quantityField: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '0.25rem',
-    minWidth: '100px',
-  },
   removeButton: {
     padding: '0.5rem',
     border: 'none',
@@ -317,22 +371,72 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: '0.25rem',
   },
-  addButton: {
+  addItemForm: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: '1rem',
+    padding: '1rem',
+    backgroundColor: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '0.5rem',
+    marginBottom: '1rem',
+  },
+  addItemField: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+  },
+  addQuantityField: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+    minWidth: '100px',
+  },
+  addItemButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.625rem 1rem',
     border: '1px solid #d1d5db',
     borderRadius: '0.375rem',
-    backgroundColor: 'white',
-    color: '#374151',
+    backgroundColor: '#556b2f',
+    color: 'white',
     fontSize: '0.875rem',
     fontWeight: '500' as const,
     cursor: 'pointer',
     transition: 'all 0.2s',
-    alignSelf: 'flex-start',
+    whiteSpace: 'nowrap' as const,
+    ':disabled': {
+      backgroundColor: '#9ca3af',
+      cursor: 'not-allowed',
+    },
+  },
+  itemsTable: {
+    border: '1px solid #e5e7eb',
+    borderRadius: '0.5rem',
+    overflow: 'hidden',
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse' as const,
+  },
+  tableHeader: {
+    padding: '0.75rem 1rem',
+    backgroundColor: '#f9fafb',
+    borderBottom: '1px solid #e5e7eb',
+    textAlign: 'left' as const,
+    fontSize: '0.875rem',
+    fontWeight: '600' as const,
+    color: '#374151',
+  },
+  tableRow: {
+    borderBottom: '1px solid #e5e7eb',
+  },
+  tableCell: {
+    padding: '1rem',
+    verticalAlign: 'middle' as const,
   },
   formActions: {
     display: 'flex',

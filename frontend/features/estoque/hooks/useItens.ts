@@ -31,8 +31,10 @@ export function useItens(filters?: UseItensFilters) {
   }, [filters?.grupo_id, filters?.tipo]);
 
   useEffect(() => {
-    // Sempre carregar itens, independente de filtros
-    loadItens();
+    // Só carregar itens no cliente
+    if (typeof window !== 'undefined') {
+      loadItens();
+    }
   }, [filters?.grupo_id, filters?.tipo]);
 
   const create = async (data: CreateItemDTO): Promise<Item> => {
