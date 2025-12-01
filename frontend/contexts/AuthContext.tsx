@@ -17,6 +17,7 @@ interface AuthContextData {
   empresa: Empresa | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (username: string, password: string, empresaId: number) => Promise<void>;
   logout: () => void;
 }
@@ -27,18 +28,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     // Carregar dados do localStorage
     const storedToken = localStorage.getItem('@eZion:token');
     const storedUser = localStorage.getItem('@eZion:user');
     const storedEmpresa = localStorage.getItem('@eZion:empresa');
 
     if (storedToken && storedUser && storedEmpresa) {
+      const userData = JSON.parse(storedUser);
+      const empresaData = JSON.parse(storedEmpresa);
+      
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      setEmpresa(JSON.parse(storedEmpresa));
+      setUser(userData);
+      setEmpresa(empresaData);
     }
+    
+    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string, empresaId: number) => {
@@ -87,6 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         empresa,
         token,
         isAuthenticated: !!token,
+        isLoading,
         login,
         logout,
       }}

@@ -9,7 +9,13 @@ router = APIRouter()
 
 @router.post("/", response_model=Requisicao, status_code=201)
 def criar_requisicao(requisicao: RequisicaoCreate, db: Session = Depends(get_db)):
-    return requisicao_repository.create_with_items(db, requisicao)
+    # TODO: Implementar geração automática de número e série
+    # Por enquanto, gerar um número simples para teste
+    import random
+    numero = f"{random.randint(1, 999999):06d}"
+    serie = "2025"
+    
+    return requisicao_repository.create_with_items(db, requisicao, numero=numero, serie=serie)
 
 @router.get("/", response_model=List[Requisicao])
 def listar_requisicoes(

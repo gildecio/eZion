@@ -24,10 +24,14 @@ class RequisicaoItem(RequisicaoItemBase):
         orm_mode = True
 
 class RequisicaoBase(BaseModel):
+    numero: str
+    serie: Optional[str] = None
     solicitante: str
     local_id: Optional[int] = None
 
-class RequisicaoCreate(RequisicaoBase):
+class RequisicaoCreate(BaseModel):
+    solicitante: str
+    local_id: Optional[int] = None
     itens: List[RequisicaoItemCreate]
 
 class RequisicaoUpdate(RequisicaoBase):

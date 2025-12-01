@@ -8,8 +8,15 @@ import { useEffect, useState } from 'react'
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    
     const token = localStorage.getItem('@eZion:token');
     
     // Se não está na página de login e não tem token, redireciona
@@ -18,10 +25,10 @@ export default function App({ Component, pageProps }: AppProps) {
     } else {
       setIsAuthChecked(true);
     }
-  }, [router.pathname]);
+  }, [router.pathname, isClient]);
 
-  if (!isAuthChecked && router.pathname !== '/login') {
-    return null; // Ou um loading
+  if (!isClient || (!isAuthChecked && router.pathname !== '/login')) {
+    return <div style={{ padding: '2rem', textAlign: 'center' }}>Carregando aplicação...</div>;
   }
 
   // Página de login não usa Layout

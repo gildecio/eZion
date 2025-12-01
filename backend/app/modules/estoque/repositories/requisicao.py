@@ -6,8 +6,10 @@ from typing import List
 
 
 class RequisicaoRepository(CRUDBase[Requisicao, RequisicaoCreate, RequisicaoUpdate]):
-    def create_with_items(self, db: Session, obj_in: RequisicaoCreate) -> Requisicao:
+    def create_with_items(self, db: Session, obj_in: RequisicaoCreate, numero: str = None, serie: str = None) -> Requisicao:
         requisicao = Requisicao(
+            numero=numero,
+            serie=serie,
             solicitante=obj_in.solicitante,
             local_id=obj_in.local_id,
             status="ABERTA"
@@ -33,11 +35,9 @@ class RequisicaoRepository(CRUDBase[Requisicao, RequisicaoCreate, RequisicaoUpda
     def get_by_filters(self, db: Session, filtros: dict) -> List[Requisicao]:
         query = db.query(Requisicao)
         if filtros.get('numero'):
-            query = query.filter(Requisicao.id == filtros['numero'])
+            query = query.filter(Requisicao.numero == filtros['numero'])
         if filtros.get('serie'):
-            # Adapte conforme o campo real de série
-            if hasattr(Requisicao, 'serie'):
-                query = query.filter(Requisicao.serie == filtros['serie'])
+            query = query.filter(Requisicao.serie == filtros['serie'])
         if filtros.get('local_id'):
             query = query.filter(Requisicao.local_id == filtros['local_id'])
         if filtros.get('data_inicio'):

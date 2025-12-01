@@ -7,6 +7,7 @@ import { useLocais } from '../hooks/useLocais';
 import type { Requisicao, CreateRequisicaoDTO, UpdateRequisicaoDTO, StatusRequisicao } from '../types/requisicao';
 import RequisicaoForm from './RequisicaoForm';
 import { DeleteConfirmModal } from '@/shared/components/DeleteConfirmModal';
+import { formatDate } from '@/utils/formatters';
 
 export default function RequisicoesCRUD() {
   const { requisicoes, loading, error, create, update, remove, refresh } = useRequisicoes();
@@ -236,7 +237,7 @@ export default function RequisicoesCRUD() {
                   <table>
                     <thead>
                       <tr>
-                        <th>ID</th>
+                        <th>Número/Série</th>
                         <th>Solicitante</th>
                         <th>Status</th>
                         <th>Data</th>
@@ -269,7 +270,7 @@ export default function RequisicoesCRUD() {
                                   >
                                     <path d="M4 2L8 6L4 10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                   </svg>
-                                  {req.id}
+                                  {req.numero}{req.serie ? `/${req.serie}` : ''}
                                 </div>
                               </td>
                               <td onClick={() => toggleExpandRow(req.id)}>{req.solicitante}</td>
@@ -278,7 +279,7 @@ export default function RequisicoesCRUD() {
                                   {req.status}
                                 </span>
                               </td>
-                              <td onClick={() => toggleExpandRow(req.id)}>{req.data_requisicao}</td>
+                              <td onClick={() => toggleExpandRow(req.id)}>{formatDate(req.data_requisicao)}</td>
                               <td onClick={() => toggleExpandRow(req.id)}>{req.itens.length}</td>
                               <td>
                                 <div className="actions">

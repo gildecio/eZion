@@ -3,7 +3,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SequenciasCRUD } from '@/features/configuracoes';
 
 const SequenciasPage: React.FC = () => {
-  const { empresa } = useAuth();
+  const { empresa, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Carregando...</p>
+      </div>
+    );
+  }
 
   if (!empresa) {
     return (

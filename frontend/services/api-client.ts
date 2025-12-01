@@ -39,14 +39,22 @@ class ApiClient {
       ? endpoint 
       : `${this.baseURL}${endpoint}`;
 
+    // Get token from localStorage
+    const token = localStorage.getItem('@eZion:token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...options.headers as Record<string, string>,
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
         signal: controller.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
+        headers,
       });
 
       clearTimeout(timeoutId);

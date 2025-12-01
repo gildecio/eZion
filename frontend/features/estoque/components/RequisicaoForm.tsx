@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import type { CreateRequisicaoDTO, Requisicao, UpdateRequisicaoDTO, RequisicaoItem } from '../types/requisicao';
 import { useItens } from '../hooks/useItens';
 import { useEmbalagens } from '../hooks/useEmbalagens';
+import { useSaldos } from '../hooks/useSaldos';
 import type { Item } from '../types/item';
 import type { EmbalagemItemWithUnidade } from '../types/embalagem';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // Tipo local para itens da requisição com informações completas
 interface RequisicaoItemComInfo extends RequisicaoItem {
@@ -21,14 +23,35 @@ interface Props {
 }
 
 export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoading }: Props) {
+  const { user } = useAuth();
   const { itens, loading: loadingItens, error: errorItens } = useItens();
-  const [solicitante, setSolicitante] = useState(requisicao?.solicitante || '');
   const [itensReq, setItensReq] = useState<RequisicaoItemComInfo[]>(requisicao?.itens || []);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [novoItemId, setNovoItemId] = useState<number>(0);
   const [novaQuantidade, setNovaQuantidade] = useState<number>(1);
   const { embalagens, loading: loadingEmbalagens } = useEmbalagens(novoItemId || undefined);
   const [novaEmbalagemId, setNovaEmbalagemId] = useState<number>(0);
+  
+  // Buscar saldos do item selecionado
+  const { saldos: saldosItem, loading: loadingSaldos, fetchSaldos } = useSaldos();
+  const [saldoDisponivel, setSaldoDisponivel] = useState<number>(0);
+
+  // Calcular saldo disponível quando item muda
+  useEffect(() => {
+    if (novoItemId) {
+      fetchSaldos({ item_id: novoItemId });
+    }
+  }, [novoItemId, fetchSaldos]);
+
+  // Atualizar saldo disponível quando saldos são carregados
+  useEffect(() => {
+    if (saldosItem.length > 0) {
+      const totalSaldo = saldosItem.reduce((acc, saldo) => acc + saldo.quantidade, 0);
+      setSaldoDisponivel(totalSaldo);
+    } else {
+      setSaldoDisponivel(0);
+    }
+  }, [saldosItem]);
 
   // Selecionar embalagem padrão automaticamente quando embalagens são carregadas
   useEffect(() => {
@@ -47,10 +70,6 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    if (!solicitante.trim()) {
-      newErrors.solicitante = 'Solicitante é obrigatório';
-    }
 
     if (itensReq.length === 0) {
       newErrors.itens = 'Adicione pelo menos um item à requisição';
@@ -122,35 +141,40 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
         embalagem_id: item.embalagem_id,
         quantidade: item.quantidade
       }));
-      onSubmit({ solicitante, itens: itensParaEnvio });
+      onSubmit({ solicitante: user?.name || '', itens: itensParaEnvio });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
       <div style={styles.formGrid}>
+        {requisicao && (
+          <>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                Número
+              </label>
+              <div style={{ padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: '#f9fafb', color: '#6b7280' }}>
+                {requisicao.numero}
+              </div>
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>
+                Série
+              </label>
+              <div style={{ padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: '#f9fafb', color: '#6b7280' }}>
+                {requisicao.serie || '-'}
+              </div>
+            </div>
+          </>
+        )}
         <div style={styles.formGroup}>
-          <label style={styles.label} htmlFor="solicitante">
-            Solicitante *
+          <label style={styles.label}>
+            Solicitante
           </label>
-          <input
-            id="solicitante"
-            type="text"
-            value={solicitante}
-            onChange={(e) => {
-              setSolicitante(e.target.value);
-              if (errors.solicitante) {
-                setErrors({ ...errors, solicitante: '' });
-              }
-            }}
-            style={{
-              ...styles.input,
-              ...(errors.solicitante ? styles.inputError : {})
-            }}
-            placeholder="Digite o nome do solicitante"
-            maxLength={255}
-          />
-          {errors.solicitante && <span style={styles.errorText}>{errors.solicitante}</span>}
+          <div style={{ padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: '#f9fafb', color: '#6b7280' }}>
+            {user?.name || 'Usuário não identificado'}
+          </div>
         </div>
       </div>
 
@@ -194,6 +218,12 @@ export default function RequisicaoForm({ requisicao, onSubmit, onCancel, isLoadi
                 </option>
               ))}
             </select>
+          </div>
+
+          <div style={styles.addSaldoField}>
+            <div style={{ padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: '#f9fafb', color: '#6b7280', fontSize: '0.875rem' }}>
+              Saldo: {loadingSaldos ? '...' : saldoDisponivel.toFixed(2)}
+            </div>
           </div>
 
           <div style={styles.addQuantityField}>
@@ -310,7 +340,7 @@ const styles = {
   },
   formGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '1.5rem',
     alignItems: 'start',
   },
@@ -387,6 +417,12 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '0.25rem',
+  },
+  addSaldoField: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.25rem',
+    minWidth: '120px',
   },
   addQuantityField: {
     display: 'flex',

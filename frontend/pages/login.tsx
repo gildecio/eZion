@@ -27,17 +27,11 @@ export default function LoginPage() {
   }, [isAuthenticated, router]);
 
   const loadEmpresas = async () => {
+    console.log('Login: loadEmpresas chamado');
     try {
-      const response = await fetch('http://localhost:8000/api/v1/contabil/empresas/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      console.log('Login: fazendo requisição para empresaService.getAll()');
+      const data = await empresaService.getAll();
+      console.log('Login: dados recebidos:', data);
       setEmpresas(data);
       if (data.length > 0) {
         setEmpresaId(data[0].id);
@@ -47,12 +41,12 @@ export default function LoginPage() {
         setError('Nenhuma empresa cadastrada no sistema. Entre em contato com o administrador.');
       }
     } catch (err: any) {
-      console.error('Erro ao carregar empresas:', err);
+      console.error('Login: erro ao carregar empresas:', err);
       const errorMsg = err.message || 'Erro de conexão com o servidor';
       
       // Verificar se é erro de rede
       if (errorMsg.includes('NetworkError') || errorMsg.includes('fetch')) {
-        setError('Não foi possível conectar ao servidor. Verifique se o backend está rodando na porta 8000.');
+        setError('Não foi possível conectar ao servidor. Verifique se o backend está rodando.');
       } else {
         setError('Erro ao carregar empresas: ' + errorMsg);
       }

@@ -18,6 +18,8 @@ export interface RequisicaoItem {
 
 export interface Requisicao {
   id: number;
+  numero: string;
+  serie?: string;
   solicitante: string;
   data_requisicao: string;
   status: StatusRequisicao;

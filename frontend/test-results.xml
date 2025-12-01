@@ -1,0 +1,8 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="3.6219019999999995">
+<testsuite name="e2e_tests.spec.js" timestamp="2025-12-01T08:44:08.737Z" hostname="chromium" tests="2" failures="0" skipped="0" time="2.485" errors="0">
+<testcase name="eZion ERP - Testes End-to-End das Telas › 01 - Página inicial deve redirecionar para login" classname="e2e_tests.spec.js" time="1.619">
+</testcase>
+<testcase name="eZion ERP - Testes End-to-End das Telas › 02 - Login com credenciais válidas" classname="e2e_tests.spec.js" time="0.866">
+</testcase>
+</testsuite>
+</testsuites>

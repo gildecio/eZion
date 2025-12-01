@@ -14,6 +14,8 @@ class Requisicao(Base):
     __tablename__ = "requisicoes"
 
     id = Column(Integer, primary_key=True, index=True)
+    numero = Column(String(20), nullable=False, index=True)  # Número formatado da sequência
+    serie = Column(String(10), nullable=True, index=True)    # Série da sequência
     solicitante = Column(String(100), nullable=False)
     data_requisicao = Column(DateTime, default=datetime.utcnow)
     status = Column(Enum(StatusRequisicao), default=StatusRequisicao.ABERTA, nullable=False)
